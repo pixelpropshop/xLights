@@ -1008,6 +1008,7 @@ xcopy /Y /S /I "$(SolutionDir)..\resources\meshobjects\*" "$(TargetDir)meshobjec
     <ClCompile Include="..\src-ui-wx\automation\ScriptsDialog.cpp" />
     <ClCompile Include="..\src-ui-wx\diagnostics\SearchPanel.cpp" />
     <ClCompile Include="..\src-ui-wx\sequencer\SelectPanel.cpp" />
+    <ClCompile Include="..\src-ui-wx\sequencer\SequencerWindowTabs.cpp" />
     <ClCompile Include="..\src-ui-wx\sequencer\SelectTimingsDialog.cpp" />
     <ClCompile Include="..\src-ui-wx\sequencer\SelectModelDialog.cpp" />
     <ClCompile Include="..\src-ui-wx\diagnostics\SeqElementMismatchDialog.cpp" />
@@ -1681,6 +1682,7 @@ xcopy /Y /S /I "$(SolutionDir)..\resources\meshobjects\*" "$(TargetDir)meshobjec
     <ClInclude Include="..\src-ui-wx\automation\ScriptsDialog.h" />
     <ClInclude Include="..\src-ui-wx\diagnostics\SearchPanel.h" />
     <ClInclude Include="..\src-ui-wx\sequencer\SelectPanel.h" />
+    <ClInclude Include="..\src-ui-wx\sequencer\SequencerWindowTabs.h" />
     <ClInclude Include="..\src-ui-wx\sequencer\SelectTimingsDialog.h" />
     <ClInclude Include="..\src-ui-wx\sequencer\SelectModelDialog.h" />
     <ClInclude Include="..\src-ui-wx\diagnostics\SeqElementMismatchDialog.h" />

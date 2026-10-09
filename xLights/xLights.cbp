@@ -569,6 +569,8 @@
 		<Unit filename="../src-ui-wx/diagnostics/SearchPanel.h" />
 		<Unit filename="../src-ui-wx/sequencer/SelectPanel.cpp" />
 		<Unit filename="../src-ui-wx/sequencer/SelectPanel.h" />
+		<Unit filename="../src-ui-wx/sequencer/SequencerWindowTabs.cpp" />
+		<Unit filename="../src-ui-wx/sequencer/SequencerWindowTabs.h" />
 		<Unit filename="../src-ui-wx/sequencer/SelectTimingsDialog.cpp" />
 		<Unit filename="../src-ui-wx/sequencer/SelectTimingsDialog.h" />
 		<Unit filename="../src-ui-wx/sequencer/SelectModelDialog.cpp" />

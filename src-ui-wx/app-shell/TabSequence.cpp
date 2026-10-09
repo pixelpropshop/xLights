@@ -148,6 +148,9 @@ void xLightsFrame::SerializePerspectives(BaseSerializingVisitor &visitor)
         if (p.iconSize > 0) {
             attr.Add("iconSize", std::to_string(p.iconSize));
         }
+        if (!p.windowTabs.empty()) {
+            attr.Add("windowTabs", p.windowTabs);
+        }
         visitor.WriteOpenTag("perspective", attr, true);
     }
     visitor.WriteCloseTag();
@@ -567,6 +570,7 @@ void xLightsFrame::LoadEffectsFile()
                 pv.version = p.attribute("version").as_string("2.0");
                 pv.gridSpacing = p.attribute("gridSpacing").as_int(0);
                 pv.iconSize = p.attribute("iconSize").as_int(0);
+                pv.windowTabs = p.attribute("windowTabs").as_string();
                 _perspectives.push_back(pv);
             }
         }

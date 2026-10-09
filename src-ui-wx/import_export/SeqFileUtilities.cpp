@@ -20,6 +20,7 @@
 
 #include <pugixml.hpp>
 
+#include "sequencer/SequencerWindowTabs.h"
 #include "sequencer/BufferPanel.h"
 #include "import_export/ConvertLogDialog.h"
 #include "render/DataLayer.h"
@@ -992,6 +993,7 @@ bool xLightsFrame::CloseSequence()
         auto* config = GetXLightsConfig();
         wxString machinePerspective = SaveSequencerPerspective();
         config->Write("xLightsMachinePerspective", machinePerspective);
+        config->Write("xLightsMachineWindowTabs", _windowTabs != nullptr ? _windowTabs->GetState() : std::string());
         spdlog::debug("AutoSave perspective");
         LogPerspective(machinePerspective);
     }

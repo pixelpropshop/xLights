@@ -131,6 +131,7 @@ class HousePreviewPanel;
 class SelectPanel;
 class SearchPanel;
 class SequenceVideoPanel;
+class SequencerWindowTabs;
 class EffectIconPanel;
 class ValueCurvesPanel;
 class ColoursPanel;
@@ -433,6 +434,7 @@ public:
         std::string version;
         int gridSpacing = 0;
         int iconSize = 0;
+        std::string windowTabs;
     };
 
     void CapturePerspectiveViewSettings(Perspective& p) const;
@@ -1743,6 +1745,9 @@ public:
     std::vector<Perspective> _perspectives;
     std::string _currentPerspectiveName;
     wxString _defaultSequencerPerspective;
+    SequencerWindowTabs* _windowTabs = nullptr;
+    std::string _defaultWindowTabs;
+    wxMenu* _windowTabsMenu = nullptr;
     bool RebuildControllerConfig(OutputManager* outputManager, ModelManager* modelManager);
 
     SequenceViewManager* GetViewsManager() { return &_sequenceViewManager; }

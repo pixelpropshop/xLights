@@ -32,6 +32,7 @@
 #include "render/SequenceElements.h"
 #include "render/SequenceMedia.h"
 #include "media/ManageMediaPanel.h"
+#include "sequencer/SequencerWindowTabs.h"
 #include "sequencer/TopEffectsPanel.h"
 #include "sequencer/EffectIconPanel.h"
 #include "shared/controls/ValueCurvesPanel.h"
@@ -228,6 +229,20 @@ void xLightsFrame::CreateSequencer()
 
     m_mgr->AddPane(mainSequencer,wxAuiPaneInfo().Name(_T("Main Sequencer")).CenterPane().Caption(_("Main Sequencer")));
 
+    _windowTabs = new SequencerWindowTabs(PanelSequencer, m_mgr);
+    _windowTabs->SetOnChanged([this]() { UpdateViewMenu(); });
+    _windowTabs->SetOnSelected([this](const wxString& name) {
+        if (name == "EffectPresets" && !_effectPresetsInitialized && EffectTreeDlg != nullptr) {
+            EffectTreeDlg->InitItems(_effectPresetManager);
+            _effectPresetsInitialized = true;
+        }
+    });
+
+    // By default the settings windows are tabs of one inspector column on the
+    // right, so each gets the full height and the grid keeps the middle.
+    m_mgr->GetPane("Effect").Right().Layer(0).Row(0).Position(0).BestSize(effectsPnl->FromDIP(wxSize(400, 600)));
+    _windowTabs->TabSettingsWindows();
+
     spdlog::debug("CreateSequencer: Updating the layout.");
     m_mgr->Update();
 
@@ -235,6 +250,7 @@ void xLightsFrame::CreateSequencer()
     // saved perspective touches it.  This is what "Reset to Defaults" restores,
     // so it can never drift out of step with the panes actually created here.
     _defaultSequencerPerspective = m_mgr->SavePerspective();
+    _defaultWindowTabs = _windowTabs->GetState();
 
     spdlog::debug("CreateSequencer: Resizing everything.");
     mainSequencer->Layout();
@@ -254,6 +270,9 @@ void xLightsFrame::ResetWindowsToDefaultPositions(wxCommandEvent& event)
     }
 
     if (m_mgr != nullptr && !_defaultSequencerPerspective.empty()) {
+        if (_windowTabs != nullptr) {
+            _windowTabs->SetState(_defaultWindowTabs);
+        }
         m_mgr->LoadPerspective(_defaultSequencerPerspective, false);
         m_mgr->GetPane("ModelPreview").MaximizeButton(true).Dockable(IsDockable("MP"));
         m_mgr->GetPane("HousePreview").MaximizeButton(true).Dockable(IsDockable("HP"));
@@ -265,6 +284,9 @@ void xLightsFrame::ResetWindowsToDefaultPositions(wxCommandEvent& event)
             savedPaneShown.clear();
         }
         m_mgr->Update();
+        if (_windowTabs != nullptr) {
+            _windowTabs->Reapply();
+        }
     }
 
     // reset preview pane positions
@@ -275,6 +297,7 @@ void xLightsFrame::ResetWindowsToDefaultPositions(wxCommandEvent& event)
     auto* config = GetXLightsConfig();
     config->DeleteEntry("ToolbarLocations");
     config->DeleteEntry("xLightsMachinePerspective");
+    config->DeleteEntry("xLightsMachineWindowTabs");
     SaveWindowPosition("xLightsSubModelDialogPosition", nullptr);
     SaveWindowPosition("xLightsTipOfTheDay", nullptr);
     SaveWindowPosition("xLightsImportDialogPosition", nullptr);
@@ -334,6 +357,8 @@ void xLightsFrame::InitSequencer()
                 _modelPreviewPanel->Refresh(false);
                 _housePreviewPanel->Refresh(false);
                 m_mgr->Update();
+                _windowTabs->SetState(config->Read("xLightsMachineWindowTabs", std::string()));
+                _windowTabs->Reapply();
             }
             LogPerspective(machinePerspective);
         } else {
@@ -3364,6 +3389,7 @@ void xLightsFrame::CapturePerspectiveViewSettings(Perspective& p) const
 {
     p.gridSpacing = mGridSpacing;
     p.iconSize = mIconSize;
+    p.windowTabs = _windowTabs != nullptr ? _windowTabs->GetState() : std::string();
 }
 
 void xLightsFrame::ViewSizePreferencesChanged()
@@ -3503,6 +3529,11 @@ void xLightsFrame::DoLoadPerspective(Perspective* perspective)
     LogPerspective(settings);
     m_mgr->LoadPerspective(settings, true);
     PopTraceContext();
+    // Before anything below re-captures this perspective; one saved without
+    // tabs must not inherit the previous perspective's.
+    if (_windowTabs != nullptr) {
+        _windowTabs->SetState(perspective->windowTabs);
+    }
 
     //perspectives may have been saved without the maximize button flag, we'll
     //make sure it's turned on.  Make sure Dockable state matches menu options/configuration
@@ -3578,6 +3609,10 @@ void xLightsFrame::DoLoadPerspective(Perspective* perspective)
             }
             m_mgr->Update();
         }
+    }
+
+    if (_windowTabs != nullptr) {
+        _windowTabs->Reapply();
     }
 
     if (m_mgr->GetPane("EffectPresets").IsShown() && !_effectPresetsInitialized && EffectTreeDlg != nullptr) {

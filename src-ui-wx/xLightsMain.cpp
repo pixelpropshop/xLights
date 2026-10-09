@@ -107,6 +107,7 @@
 #include "sequencer/RenderCommandEvent.h"
 #include "app-shell/RestoreBackupDialog.h"
 #include "sequencer/SeqSettingsDialog.h"
+#include "sequencer/SequencerWindowTabs.h"
 #include "effects/ShaderDownloadDialog.h"
 #include "utils/ShowGuid.h"
 #include "utils/SpecialOptions.h"
@@ -1446,6 +1447,17 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     EffectsToolBar->Bind(wxEVT_CONTEXT_MENU, &xLightsFrame::OnEffectsToolBarContextMenu, this);
     BuildToolbarsMenu();
 
+    _windowTabsMenu = new wxMenu();
+    SequencerWindowTabs::AppendMenuItems(_windowTabsMenu);
+    MenuItem18->Insert(MenuItem18->GetMenuItemCount() - 3, wxID_ANY, _("Window Tabs"), _windowTabsMenu);
+    Bind(wxEVT_MENU, [this](wxCommandEvent& event) {
+        if (_windowTabs != nullptr && SequencerWindowTabs::IsMenuCommand(event.GetId())) {
+            _windowTabs->HandleMenuCommand(event.GetId());
+        } else {
+            event.Skip();
+        }
+    });
+
     MainAuiManager->GetPane("Tools Tool Bar").Hide();
     MainAuiManager->Update();
 
@@ -2381,6 +2393,9 @@ xLightsFrame::~xLightsFrame()
 
     config->Flush();
 
+    if (_windowTabs != nullptr) {
+        _windowTabs->Shutdown();
+    }
     // must call these or the app will crash on exit
     m_mgr->UnInit();
     MainAuiManager->UnInit();
@@ -4608,8 +4623,18 @@ void xLightsFrame::OnMenu_GenerateCustomModelSelected(wxCommandEvent& event)
 void xLightsFrame::OnPaneClose(wxAuiManagerEvent& event)
 {
     SetFocus();
-    if (event.pane != nullptr)
+    if (event.pane != nullptr) {
         event.pane->Hide();
+        // Closing a tabbed window closes its tab. Deferred until the manager
+        // has finished closing the pane.
+        if (_windowTabs != nullptr && _windowTabs->Contains(event.pane->name)) {
+            CallAfter([this, name = event.pane->name]() {
+                if (_windowTabs != nullptr) {
+                    _windowTabs->CloseWindow(name);
+                }
+            });
+        }
+    }
     UpdateViewMenu();
 }
 
@@ -8183,6 +8208,17 @@ bool xLightsFrame::TogglePaneVisibility(const wxString& name, bool initSequencer
         return false;
     }
 
+    if (_windowTabs != nullptr && _windowTabs->Contains(name)) {
+        // A tabbed window is shown by selecting its tab; hiding it closes the tab.
+        const bool show = !info.IsShown();
+        show ? _windowTabs->SelectWindow(name) : _windowTabs->CloseWindow(name);
+        UpdateViewMenu();
+        if (nowShown != nullptr) {
+            *nowShown = show;
+        }
+        return true;
+    }
+
     const bool shown = !info.IsShown();
     shown ? info.Show() : info.Hide();
     m_mgr->Update();
@@ -8208,6 +8244,12 @@ bool xLightsFrame::SetPaneVisibility(const wxString& name, bool show, bool initS
     wxAuiPaneInfo& info = m_mgr->GetPane(name);
     if (!info.IsOk()) {
         return false;
+    }
+    // State-driven callers (the effect assist mode, mostly) must not switch
+    // the user's selected tab or close one; only the user does that.
+    if (_windowTabs != nullptr && _windowTabs->Contains(name)) {
+        UpdateViewMenu();
+        return true;
     }
     if (info.IsShown() != show) {
         show ? info.Show() : info.Hide();
@@ -9460,6 +9502,9 @@ void xLightsFrame::UpdateViewMenu()
                 (*pane).second->Check(m_mgr->GetPane(info[x].name).IsShown());
             }
         }
+    }
+    if (_windowTabs != nullptr && _windowTabsMenu != nullptr) {
+        _windowTabs->UpdateMenuChecks(_windowTabsMenu);
     }
 }
 

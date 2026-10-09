@@ -19,6 +19,9 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
     -bug (Jeremy)                Layout: properties pane is titled "Model Properties" for a selected model after a
                                  layout loads, and the Start/End Chan columns fit their contents
     -change (Jeremy)             Flat main Layout/Sequencer tabs; Tip of the Day opens at a smaller default size
+    -enh (Jeremy)                Sequencer: Effect Settings, Color, Layer Blending and Layer Settings open as tabs of
+                                 one inspector column by default; any settings window can be tabbed, detached or
+                                 closed (View > Windows > Window Tabs), and the tabs are saved with each perspective
     -bug (dkulp)                 Import Effects: copied images/videos/shaders/faces are now stored show-relative, so the
                                  next open no longer reports them all as relocated
     -enh (dkulp)                 Import Effects: offer to convert unsupported imported videos (e.g. AVI) during the
