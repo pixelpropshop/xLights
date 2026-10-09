@@ -38,6 +38,9 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
                                  marker, theme colors and two tick heights
     -change (Jeremy)             Effect panels show labeled sections with a header line instead of a group box
     -change (Jeremy)             Windows/Linux: Preferences has a page list with an icon per page and a title on each page
+    -enh (Jeremy)                The play toolbar shows the current play position
+    -enh (Jeremy)                Optional side rail for switching between Layout and Sequencer in place of the tabs
+                                 (Preferences > View > Workspace Switcher)
     -enh (Jeremy)                Sequencer: Effect Settings, Color, Layer Blending and Layer Settings open as tabs of
                                  one inspector column by default; any settings window can be tabbed, detached or
                                  closed (View > Windows > Window Tabs), and the tabs are saved with each perspective

@@ -135,6 +135,9 @@ const LineIcon ICONS[] = {
     { "xlART_Download_ICON", "M12 3v12M7 10l5 5 5-5M5 21h14", false, Tint::Normal },
     { "xlART_Import Custom_ICON", "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11v6M9 14l3 3 3-3", false, Tint::Normal },
     { "xlART_Add Object_ICON", "M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 8v6M9 11h6", false, Tint::Normal },
+    // Workspace rail
+    { "xlART_RAIL_LAYOUT", "M3 11l9-7 9 7M5 10v10h14V10M10 20v-5h4v5", false, Tint::Normal },
+    { "xlART_RAIL_SEQUENCER", "M3 6h10M7 12h14M3 18h8M15 18h4", false, Tint::Normal },
     // Preferences pages
     { "xlART_PREF_BACKUP", "M3 3h18v4H3zM4 7v13h16V7M10 12h4", false, Tint::Normal },
     { "xlART_PREF_VIEW", "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0", false, Tint::Normal },

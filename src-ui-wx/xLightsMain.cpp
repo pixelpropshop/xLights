@@ -109,6 +109,7 @@
 #include "sequencer/SeqSettingsDialog.h"
 #include "sequencer/SequencerWindowTabs.h"
 #include "shared/utils/ModernDockArt.h"
+#include "shared/utils/LineIcons.h"
 #include "effects/ShaderDownloadDialog.h"
 #include "utils/ShowGuid.h"
 #include "utils/SpecialOptions.h"
@@ -356,6 +357,10 @@ const wxWindowID xLightsFrame::ID_MENUITEM3 = wxNewId();
 const wxWindowID xLightsFrame::ID_MENUITEM_WINDOWS_PERSPECTIVE = wxNewId();
 
 namespace {
+const wxWindowID ID_RAIL_LAYOUT = wxNewId();
+const wxWindowID ID_RAIL_SEQUENCER = wxNewId();
+const wxWindowID ID_RAIL_PREFERENCES = wxNewId();
+
 // Stores the main window's size, position and maximized state in the xLights
 // config so the window comes back where the user left it.
 class MainWindowGeometry : public wxTopLevelWindow::GeometrySerializer {
@@ -1470,6 +1475,44 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
 
     Notebook1->SetArtProvider(new wxAuiFlatTabArt());
 
+    // Play position beside the transport buttons.
+    PlayToolBar->AddSeparator();
+    _toolbarTime = new wxStaticText(PlayToolBar, wxID_ANY, "0:00.00", wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE | wxALIGN_CENTRE_HORIZONTAL);
+    _toolbarTime->SetFont(wxFont(wxFontInfo(12).Family(wxFONTFAMILY_TELETYPE)));
+    _toolbarTime->SetMinSize(wxSize(_toolbarTime->GetTextExtent("00:00.00").x + FromDIP(16), -1));
+    _toolbarTime->SetToolTip(_("Play position"));
+    PlayToolBar->AddControl(_toolbarTime);
+    PlayToolBar->Realize();
+    MainAuiManager->GetPane(PlayToolBar).BestSize(PlayToolBar->GetBestSize());
+
+    // Optional workspace rail (Preferences > View > Workspace Switcher): the
+    // Layout and Sequencer pages as a vertical bar in place of the tabs.
+    {
+        auto railIcon = [](const char* line, const char* classic) {
+            wxBitmapBundle b = CreateLineIconBundle(line, 24);
+            return b.IsOk() ? b : wxArtProvider::GetBitmapBundle(classic, wxART_TOOLBAR);
+        };
+        WorkspaceRail = new xlAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_VERTICAL | wxAUI_TB_DEFAULT_STYLE);
+        WorkspaceRail->SetArtProvider(new ModernToolBarArt());
+        WorkspaceRail->AddTool(ID_RAIL_LAYOUT, _("Layout"), railIcon("xlART_RAIL_LAYOUT", "xlART_HOUSE_PREVIEW"), _("Layout"), wxITEM_CHECK);
+        WorkspaceRail->AddTool(ID_RAIL_SEQUENCER, _("Sequencer"), railIcon("xlART_RAIL_SEQUENCER", "xlART_SEQUENCE_ELEMENTS"), _("Sequencer"), wxITEM_CHECK);
+        WorkspaceRail->AddStretchSpacer();
+        WorkspaceRail->AddTool(ID_RAIL_PREFERENCES, _("Preferences"), railIcon("xlART_PREF_OTHER", "xlART_SETTINGS"), _("Preferences"));
+        WorkspaceRail->Realize();
+        WorkspaceRail->Bind(wxEVT_TOOL, [this](wxCommandEvent& event) {
+            if (event.GetId() == ID_RAIL_LAYOUT) {
+                Notebook1->SetSelection(LAYOUTTAB);
+            } else if (event.GetId() == ID_RAIL_SEQUENCER) {
+                Notebook1->SetSelection(NEWSEQUENCER);
+            } else if (event.GetId() == ID_RAIL_PREFERENCES) {
+                ShowPreferencesDialog();
+            }
+            UpdateWorkspaceRail();
+        });
+        MainAuiManager->AddPane(WorkspaceRail, wxAuiPaneInfo().Name("WorkspaceRail").ToolbarPane().Left().Layer(20).Gripper(false)
+                                    .Floatable(false).Movable(false).Dockable(false).CloseButton(false).CaptionVisible(false).Hide());
+    }
+
     // The designer's fixed client size is taller than many laptop screens, so
     // use the saved geometry, or start maximized the first time.
     if (!renderOnlyMode && GetXLightsConfig() != nullptr) {
@@ -1674,6 +1717,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
 
     config->Read("xLightsZoomMethodToCursor", &_zoomMethodToCursor, true);
     config->Read("xLightsTintEffectsByType", &_tintEffectsByType, true);
+    config->Read("xLightsWorkspaceRail", &_workspaceRail, false);
     spdlog::debug("Zoom Method To Cursor: {}.", toStr(_zoomMethodToCursor));
 
     config->Read("xLightsHidePresetPreview", &_hidePresetPreview, false);
@@ -1824,9 +1868,12 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
         const int size = AUIStatusBar->GetSize().GetHeight();
         MainAuiManager->LoadPerspective(tbData.Right(tbData.size() - 5));
         MainAuiManager->GetPane("Status Bar").MinSize(wxSize(-1, size));
+        // A saved layout predating the play-position readout would clip it.
+        MainAuiManager->GetPane(PlayToolBar).BestSize(PlayToolBar->GetBestSize());
         MainAuiManager->Update();
     }
     UpdateToolbarsMenu();
+    SetWorkspaceRail(_workspaceRail);
     spdlog::debug("Perspectives loaded.");
 
     config->Read("xLightsBackupSubdirectories", &_backupSubfolders, true);
@@ -2363,6 +2410,7 @@ xLightsFrame::~xLightsFrame()
     config->Write("xLightsAutoShowHousePreview", _autoShowHousePreview);
     config->Write("xLightsZoomMethodToCursor", _zoomMethodToCursor);
     config->Write("xLightsTintEffectsByType", _tintEffectsByType);
+    config->Write("xLightsWorkspaceRail", _workspaceRail);
     config->Write("xLightsHidePresetPreview", _hidePresetPreview);
     config->Write("xLightsSmallWaveform", _smallWaveform);
     config->Write("xLightsRenderBell", _renderBellEnabled);
@@ -3075,6 +3123,7 @@ void xLightsFrame::OnNotebook1PageChanged1(wxAuiNotebookEvent& event)
     } resetChanged;
 
     int pagenum = event.GetSelection(); // Notebook1->GetSelection();
+    UpdateWorkspaceRail();
     if (pagenum == LAYOUTTAB) {
         GetOutputModelManager()->AddASAPWork(OutputModelManager::WORK_REDRAW_LAYOUTPREVIEW, "OnNotebook1PageChanged");
         SetStatusText(_(""));
@@ -7663,6 +7712,36 @@ void xLightsFrame::SetHousePreviewKeepOnTop(bool b)
 void xLightsFrame::SetZoomMethodToCursor(bool b)
 {
     _zoomMethodToCursor = b;
+}
+
+void xLightsFrame::SetWorkspaceRail(bool rail)
+{
+    _workspaceRail = rail;
+    wxAuiPaneInfo& pane = MainAuiManager->GetPane("WorkspaceRail");
+    if (pane.IsOk()) {
+        pane.Show(rail);
+    }
+    Notebook1->SetTabCtrlHeight(rail ? 0 : -1);
+    UpdateWorkspaceRail();
+    MainAuiManager->Update();
+}
+
+void xLightsFrame::UpdateWorkspaceRail()
+{
+    if (WorkspaceRail == nullptr) {
+        return;
+    }
+    const int page = Notebook1->GetSelection();
+    WorkspaceRail->ToggleTool(ID_RAIL_LAYOUT, page == LAYOUTTAB);
+    WorkspaceRail->ToggleTool(ID_RAIL_SEQUENCER, page == NEWSEQUENCER);
+    WorkspaceRail->Refresh();
+}
+
+void xLightsFrame::SetToolbarTime(const wxString& time)
+{
+    if (_toolbarTime != nullptr && _toolbarTime->GetLabel() != time) {
+        _toolbarTime->SetLabel(time);
+    }
 }
 
 void xLightsFrame::SetTintEffectsByType(bool b)

@@ -1173,6 +1173,9 @@ public:
     bool _housePreviewKeepOnTop = false;
     bool _zoomMethodToCursor = true;
     bool _tintEffectsByType = true;
+    bool _workspaceRail = false;
+    xlAuiToolBar* WorkspaceRail = nullptr;
+    wxStaticText* _toolbarTime = nullptr;
     bool _hidePresetPreview = false;
     bool _disableKeyAcceleration = false;
     bool _smallWaveform = false;
@@ -1449,6 +1452,10 @@ public:
     void SetZoomMethodToCursor(bool b);
     bool TintEffectsByType() const { return _tintEffectsByType; }
     void SetTintEffectsByType(bool b);
+    bool WorkspaceRailShown() const { return _workspaceRail; }
+    void SetWorkspaceRail(bool rail);
+    void UpdateWorkspaceRail();
+    void SetToolbarTime(const wxString& time);
 
     int EffectAssistMode() const { return mEffectAssistMode;}
     void SetEffectAssistMode(int i);

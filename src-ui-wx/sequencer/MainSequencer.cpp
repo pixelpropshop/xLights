@@ -419,6 +419,7 @@ bool MainSequencer::UpdateTimeDisplay(int time_ms, const std::vector<float> &fps
         int totalSeconds = (minutes * 60) + seconds;
         play_time = wxString::Format("Time: %d.%02ds", totalSeconds, msec);
     }
+    xLightsApp::GetFrame()->SetToolbarTime(play_time.AfterFirst(' '));
     wxString fpsStr;
     if (!fps.empty()) {
         fpsStr = wxString::Format("FPS: ");

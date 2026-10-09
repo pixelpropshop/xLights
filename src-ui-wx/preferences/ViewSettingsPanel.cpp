@@ -147,6 +147,18 @@ ViewSettingsPanel::ViewSettingsPanel(wxWindow* parent, xLightsFrame* f, wxWindow
     _tintEffectsCheckBox = new wxCheckBox(this, wxID_ANY, _("Tint Effects By Type"));
     _tintEffectsCheckBox->SetToolTip(_("Fill each effect in the sequencer grid with a light color for its effect type."));
     GridBagSizer1->Add(_tintEffectsCheckBox, wxGBPosition(13, 0), wxGBSpan(1, 2), wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    auto* switcherLabel = new wxStaticText(this, wxID_ANY, _("Workspace Switcher"));
+    GridBagSizer1->Add(switcherLabel, wxGBPosition(14, 0), wxDefaultSpan, wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    _workspaceSwitcherChoice = new wxChoice(this, wxID_ANY);
+    _workspaceSwitcherChoice->Append(_("Tabs"));
+    _workspaceSwitcherChoice->Append(_("Side Rail"));
+    _workspaceSwitcherChoice->SetToolTip(_("Switch between Layout and Sequencer with the tabs, or with a bar on the left side of the window."));
+    GridBagSizer1->Add(_workspaceSwitcherChoice, wxGBPosition(14, 1), wxDefaultSpan, wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    _workspaceSwitcherChoice->Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
+        if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
+            TransferDataFromWindow();
+        }
+    });
     _tintEffectsCheckBox->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent&) {
         if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
             TransferDataFromWindow();
@@ -184,6 +196,7 @@ bool ViewSettingsPanel::TransferDataToWindow()
     CrosshairSizeChoice->SetSelection(frame->GetCrosshairSize());
     _toolbarIconStyleChoice->SetSelection(SavedUseLineIcons() ? 0 : 1);
     _tintEffectsCheckBox->SetValue(frame->TintEffectsByType());
+    _workspaceSwitcherChoice->SetSelection(frame->WorkspaceRailShown() ? 1 : 0);
     int ts = frame->ToolIconSize();
     switch (ts) {
     case 48:
@@ -239,6 +252,9 @@ bool ViewSettingsPanel::TransferDataFromWindow()
     frame->SetHidePresetPreview(CheckBox_PresetPreview->IsChecked());
     frame->SetPaletteSizeString(Choice_PaletteSize->GetStringSelection());
     frame->SetTintEffectsByType(_tintEffectsCheckBox->IsChecked());
+    if ((_workspaceSwitcherChoice->GetSelection() == 1) != frame->WorkspaceRailShown()) {
+        frame->SetWorkspaceRail(_workspaceSwitcherChoice->GetSelection() == 1);
+    }
     const bool line = _toolbarIconStyleChoice->GetSelection() == 0;
     if (line != SavedUseLineIcons()) {
         SetUseLineIcons(line);
