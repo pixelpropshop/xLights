@@ -838,8 +838,8 @@ void JsonEffectPanel::BuildSection(wxSizer* parentSizer, const nlohmann::json& g
         propLookup[prop.value("id", "")] = prop;
     }
 
-    // If a label is provided wrap the section in a wxStaticBoxSizer so it
-    // reads visually as a grouped region, otherwise just use a plain grid.
+    // A labeled section gets a header (bold title and a rule) above its grid,
+    // otherwise it is just the plain grid.
     wxSizer* contentSizer = nullptr;
     wxWindow* parentWin = contentParent_ ? contentParent_ : this;
 
@@ -853,11 +853,15 @@ void JsonEffectPanel::BuildSection(wxSizer* parentSizer, const nlohmann::json& g
     }
 
     if (!label.empty()) {
-        // Parent the static box to contentParent_ (the scroll window when
-        // the panel is scrollable) so the frame scrolls with its contents.
-        auto* boxSizer = new wxStaticBoxSizer(wxVERTICAL, parentWin, wxString(label));
-        boxSizer->Add(innerGrid, 1, wxALL | wxEXPAND, 2);
-        parentSizer->Add(boxSizer, 0, wxALL | wxEXPAND, 5);
+        // Parented to contentParent_ (the scroll window when the panel is
+        // scrollable) so the header scrolls with its contents.
+        auto* header = new wxBoxSizer(wxHORIZONTAL);
+        auto* title = new wxStaticText(parentWin, wxID_ANY, wxString(label));
+        title->SetFont(title->GetFont().Bold());
+        header->Add(title, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, parentWin->FromDIP(8));
+        header->Add(new wxStaticLine(parentWin, wxID_ANY), 1, wxALIGN_CENTER_VERTICAL);
+        parentSizer->Add(header, 0, wxLEFT | wxRIGHT | wxTOP | wxEXPAND, parentWin->FromDIP(6));
+        parentSizer->Add(innerGrid, 0, wxLEFT | wxRIGHT | wxBOTTOM | wxEXPAND, parentWin->FromDIP(5));
     } else {
         parentSizer->Add(innerGrid, 0, wxALL | wxEXPAND, 5);
     }

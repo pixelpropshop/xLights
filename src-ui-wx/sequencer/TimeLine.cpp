@@ -1377,17 +1377,51 @@ void TimeLine::OnResize(wxSizeEvent& event)
     event.Skip();
 }
 
+namespace {
+wxColour Mix(const wxColour& a, const wxColour& b, double amount) {
+    auto m = [amount](unsigned char x, unsigned char y) {
+        return (unsigned char)(x + (y - x) * amount);
+    };
+    return wxColour(m(a.Red(), b.Red()), m(a.Green(), b.Green()), m(a.Blue(), b.Blue()));
+}
+
+// Ruler colors derived from the theme, so markers and lines stay visible in
+// dark mode instead of being drawn in fixed black.
+struct RulerColors {
+    wxColour background;
+    wxColour tick;
+    wxColour label;
+    wxColour line;
+    wxColour accent;
+    wxColour markerFill;
+};
+
+RulerColors GetRulerColors() {
+    const bool dark = IsDarkMode();
+    const wxColour face = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE);
+    const wxColour text = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT);
+    RulerColors c;
+    c.background = dark ? Mix(face, *wxBLACK, 0.2) : face;
+    c.tick = Mix(c.background, text, 0.45);
+    c.label = Mix(text, c.background, 0.2);
+    c.line = text;
+    c.accent = dark ? wxColour(242, 169, 59) : wxColour(201, 133, 18);
+    c.markerFill = Mix(c.background, text, 0.3);
+    return c;
+}
+} // namespace
+
 void TimeLine::render( wxDC& dc ) {
     wxCoord w,h;
-    wxPen pen(wxColor(128,128,128));
-    const wxPen* pen_black = wxBLACK_PEN;
-    const wxPen* pen_green = wxGREEN_PEN;
+    const RulerColors colors = GetRulerColors();
+    wxPen pen(colors.tick);
+    const wxPen pen_line(colors.line);
     const wxPen* pen_transparent = wxTRANSPARENT_PEN;
     dc.SetPen(pen);
     dc.GetSize(&w,&h);
-    wxBrush brush(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE),wxBRUSHSTYLE_SOLID);
-    wxBrush brush_range(wxColor(187, 173,193),wxBRUSHSTYLE_SOLID);
-    wxBrush brush_past_end(wxColor(153, 204, 255),wxBRUSHSTYLE_CROSSDIAG_HATCH);
+    wxBrush brush(colors.background, wxBRUSHSTYLE_SOLID);
+    wxBrush brush_range(Mix(colors.background, colors.accent, 0.3), wxBRUSHSTYLE_SOLID);
+    wxBrush brush_past_end(Mix(colors.background, colors.line, 0.25), wxBRUSHSTYLE_CROSSDIAG_HATCH);
     dc.SetBrush(brush);
     dc.DrawRectangle(0,0,w,h+1);
 
@@ -1401,6 +1435,7 @@ void TimeLine::render( wxDC& dc ) {
     wxFont f = dc.GetFont();
     f.SetPointSize(7.0);
     dc.SetFont(f);
+    dc.SetTextForeground(colors.label);
 
     // Draw the selection fill if its a range
     if( mSelectedPlayMarkerStart != -1 && mSelectedPlayMarkerEnd != -1 ) {
@@ -1420,10 +1455,11 @@ void TimeLine::render( wxDC& dc ) {
     for(int x=0;x<w;x++)
     {
 
-        // Draw hash marks
+        // Draw hash marks: full height at labels, half height between them
         if ((x+mStartPixelOffset)%(PIXELS_PER_MAJOR_HASH/2)==0)
         {
-            dc.DrawLine(x,h - 10,x,h-1);
+            const bool major = (x + mStartPixelOffset) % PIXELS_PER_MAJOR_HASH == 0;
+            dc.DrawLine(x, h - (major ? 10 : 5), x, h - 1);
         }
         // Draw time label
         if((x+mStartPixelOffset)%PIXELS_PER_MAJOR_HASH==0)
@@ -1483,17 +1519,17 @@ void TimeLine::render( wxDC& dc ) {
         points[3].x = play_start_mark;
         points[3].y = 0;
         
-        dc.SetPen(*pen_green);
-        dc.SetBrush(*wxGREEN_BRUSH);
+        dc.SetPen(wxPen(colors.accent));
+        dc.SetBrush(wxBrush(colors.accent));
         dc.DrawPolygon(4, points);
-        dc.SetPen(*pen_black);
+        dc.SetPen(wxPen(Mix(colors.accent, *wxBLACK, 0.45)));
         dc.SetBrush(wxNullBrush);
         dc.DrawLines(4, points);
     }
 
     // Draw the selection line if not a range
     if (mSelectedPlayMarkerStart != -1 && mSelectedPlayMarkerEnd == -1) {
-        dc.SetPen(*pen_black);
+        dc.SetPen(pen_line);
         dc.DrawLine(mSelectedPlayMarkerStart, 0, mSelectedPlayMarkerStart, h-1);
     }
 
@@ -1546,17 +1582,18 @@ void TimeLine::DrawTag(wxDC& dc, int tag, int position, int y_bottom)
 
 void TimeLine::DrawTriangleMarkerFacingLeft(wxDC& dc, int& play_start_mark, const int& tri_size, int& height)
 {
-    const wxPen* pen_black = wxBLACK_PEN;
-    const wxPen* pen_grey = wxLIGHT_GREY_PEN;
+    const RulerColors colors = GetRulerColors();
+    const wxPen pen_black(colors.line);
+    const wxPen pen_grey(colors.markerFill);
     int y_top = height-tri_size;
     int y_bottom = y_top;
     int arrow_end = play_start_mark + 1;
-    dc.SetPen(*pen_grey);
+    dc.SetPen(pen_grey);
     for( ; y_bottom < height-1; y_bottom++, y_top--, arrow_end++ )
     {
         dc.DrawLine(arrow_end,y_top,arrow_end,y_bottom);
     }
-    dc.SetPen(*pen_black);
+    dc.SetPen(pen_black);
     dc.DrawLine(play_start_mark,y_top,play_start_mark,height-1);
     dc.DrawLine(play_start_mark+1,height-tri_size,arrow_end,y_top);
     dc.DrawLine(play_start_mark+1,height-tri_size,arrow_end,y_bottom);
@@ -1565,17 +1602,18 @@ void TimeLine::DrawTriangleMarkerFacingLeft(wxDC& dc, int& play_start_mark, cons
 
 void TimeLine::DrawTriangleMarkerFacingRight(wxDC& dc, int& play_start_mark, const int& tri_size, int& height)
 {
-    const wxPen* pen_black = wxBLACK_PEN;
-    const wxPen* pen_grey = wxLIGHT_GREY_PEN;
+    const RulerColors colors = GetRulerColors();
+    const wxPen pen_black(colors.line);
+    const wxPen pen_grey(colors.markerFill);
     int y_top = height-tri_size;
     int y_bottom = y_top;
     int arrow_end = play_start_mark - 1;
-    dc.SetPen(*pen_grey);
+    dc.SetPen(pen_grey);
     for( ; y_bottom < height-1; y_bottom++, y_top--, arrow_end-- )
     {
         dc.DrawLine(arrow_end,y_top,arrow_end,y_bottom);
     }
-    dc.SetPen(*pen_black);
+    dc.SetPen(pen_black);
     dc.DrawLine(play_start_mark,y_top,play_start_mark,height-1);
     dc.DrawLine(play_start_mark-1,height-tri_size,arrow_end,y_top);
     dc.DrawLine(play_start_mark-1,height-tri_size,arrow_end,y_bottom);
@@ -1584,14 +1622,15 @@ void TimeLine::DrawTriangleMarkerFacingRight(wxDC& dc, int& play_start_mark, con
 
 void TimeLine::DrawRectangle(wxDC& dc, int x1, int y1, int x2, int y2)
 {
-    const wxPen* pen_outline = wxMEDIUM_GREY_PEN;
-    const wxPen* pen_grey = wxLIGHT_GREY_PEN;
-    dc.SetPen(*pen_grey);
+    const RulerColors colors = GetRulerColors();
+    const wxPen pen_outline(Mix(colors.markerFill, colors.line, 0.3));
+    const wxPen pen_grey(colors.markerFill);
+    dc.SetPen(pen_grey);
     for( int y = y1; y <= y2; y++ )
     {
         dc.DrawLine(x1, y, x2, y);
     }
-    dc.SetPen(*pen_outline);
+    dc.SetPen(pen_outline);
     dc.DrawLine(x1, y1, x2, y1);
     dc.DrawLine(x1, y2, x2, y2);
 }

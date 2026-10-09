@@ -34,6 +34,9 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
                                  original palette (Preferences > Colors)
     -enh (Jeremy)                Effects in the sequencer grid are tinted by effect type (Preferences > View > Tint Effects By Type)
     -bug (Jeremy)                Sequencer grid rows are sized for 125-200% display scaling on Windows and Linux
+    -bug (Jeremy)                Sequencer timeline: selection lines and markers are visible in dark mode; amber play
+                                 marker, theme colors and two tick heights
+    -change (Jeremy)             Effect panels show labeled sections with a header line instead of a group box
     -enh (Jeremy)                Sequencer: Effect Settings, Color, Layer Blending and Layer Settings open as tabs of
                                  one inspector column by default; any settings window can be tabbed, detached or
                                  closed (View > Windows > Window Tabs), and the tabs are saved with each perspective
