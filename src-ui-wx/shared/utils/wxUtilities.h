@@ -159,6 +159,8 @@ wxColor LightOrMediumGrey();
 wxColor BlueOrLightBlue();
 wxColor RedOrLightRed();
 bool IsDarkMode();
+// Background for read-only or highlighted fields that stays readable in dark mode.
+wxColour GetReadOnlyFieldColour();
 #ifdef __WXMSW__
 void SetSuppressDarkMode(bool suppress);
 bool IsSuppressDarkMode();

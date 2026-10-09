@@ -25,6 +25,7 @@
 #include "UtilFunctions.h"
 #include "utils/SpecialOptions.h"
 #include "models/ModelManager.h"
+#include "shared/utils/wxUtilities.h"
 
 #ifdef SetPort
 #undef SetPort  // Windows winspool.h defines SetPort as SetPortW
@@ -174,7 +175,7 @@ void ControllerSerialPropertyAdapter::AddProperties(wxPropertyGrid* propertyGrid
         if (serialOutput) {
             if (!serialOutput->AllowsBaudRateSetting()) {
                 p->ChangeFlag(wxPGFlags::ReadOnly, true);
-                p->SetBackgroundColour(*wxLIGHT_GREY);
+                p->SetBackgroundColour(GetReadOnlyFieldColour());
                 p->SetHelpString("Speed is fixed for this protocol.");
             }
         }
@@ -196,7 +197,7 @@ void ControllerSerialPropertyAdapter::AddProperties(wxPropertyGrid* propertyGrid
 
         if (_serial.IsAutoSize()) {
             p->ChangeFlag(wxPGFlags::ReadOnly, true);
-            p->SetBackgroundColour(*wxLIGHT_GREY);
+            p->SetBackgroundColour(GetReadOnlyFieldColour());
             p->SetHelpString("Channels cannot be changed when an output is set to Auto Size.");
         } else {
             p->SetEditor("SpinCtrl");

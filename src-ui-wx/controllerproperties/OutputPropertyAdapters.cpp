@@ -1071,7 +1071,7 @@ void LOROptimisedOutputPropertyAdapter::AddProperties(wxPropertyGrid* propertyGr
 
         p = propertyGrid->AppendIn(p2, new wxStringProperty("Unit ID - Hex", wxString::Format("DeviceUnitIDHex/%d", i), wxString::Format("0x%02x", it->GetUnitId())));
         p->ChangeFlag(wxPGFlags::ReadOnly, true);
-        p->SetBackgroundColour(*wxLIGHT_GREY);
+        p->SetBackgroundColour(GetReadOnlyFieldColour());
 
         if (!isPixie) {
             propertyGrid->AppendIn(p2, new wxEnumProperty("Address Mode", wxString::Format("DeviceAddressMode/%d", i), lorAddressModes, (int)it->GetAddressMode()));

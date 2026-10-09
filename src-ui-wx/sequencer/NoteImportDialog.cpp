@@ -358,7 +358,7 @@ void NoteImportDialog::ValidateWindow()
 
     if (IsTimingUnique(TextCtrl_TimingName->GetValue()))
     {
-        TextCtrl_TimingName->SetBackgroundColour(*wxWHITE);
+        TextCtrl_TimingName->SetBackgroundColour(wxNullColour);
     }
     else
     {
@@ -412,7 +412,7 @@ void NoteImportDialog::ValidateWindow()
     wxString file = TextCtrl_Piano_File->GetValue();
     if (file == "" || FileExists(file))
     {
-        TextCtrl_Piano_File->SetBackgroundColour(*wxWHITE);
+        TextCtrl_Piano_File->SetBackgroundColour(wxNullColour);
     }
     else
     {

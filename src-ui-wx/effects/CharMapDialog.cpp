@@ -9,6 +9,7 @@
  **************************************************************/
 
 #include "CharMapDialog.h"
+#include "shared/utils/wxUtilities.h"
 
 //(*InternalHeaders(CharMapDialog)
 #include <wx/intl.h>
@@ -136,7 +137,7 @@ CharMapDialog::CharMapDialog(wxWindow* parent, wxFont font, int charCode, wxWind
         Connect(id, wxEVT_COMMAND_LEFT_DCLICK, (wxObjectEventFunction)& CharMapDialog::OnDClick, 0, this);
         Connect(id, wxEVT_MOTION, (wxObjectEventFunction)& CharMapDialog::OnMouseMove, 0, this);
         if (c == _originalCode) {
-            label->SetBackgroundColour(*wxLIGHT_GREY);
+            label->SetBackgroundColour(GetReadOnlyFieldColour());
         }
         GridSizer1->Add(label, 1, wxALL | wxEXPAND, 0);
     }
@@ -178,7 +179,7 @@ void CharMapDialog::PageChange()
         if (!IsValidUnicode(c)) {
             label->SetBackgroundColour(*wxRED);
         } else if (c == _originalCode) {
-            label->SetBackgroundColour(*wxLIGHT_GREY);
+            label->SetBackgroundColour(GetReadOnlyFieldColour());
         } else {
             label->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
         }
@@ -205,7 +206,7 @@ void CharMapDialog::OnMouseMove(wxMouseEvent& event)
             newHighlighted = c;
         } else if (c == _highlighted) {
             if (c == _originalCode) {
-                label->SetBackgroundColour(*wxLIGHT_GREY);
+                label->SetBackgroundColour(GetReadOnlyFieldColour());
             } else {
                 label->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
             }

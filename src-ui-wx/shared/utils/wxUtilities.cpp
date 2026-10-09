@@ -633,6 +633,10 @@ void SetSuppressDarkMode(bool suppress) {
 }
 #endif
 
+wxColour GetReadOnlyFieldColour() {
+    return IsDarkMode() ? wxColour(70, 70, 70) : *wxLIGHT_GREY;
+}
+
 bool IsDarkMode() {
     return wxSystemSettings::GetAppearance().IsDark()
 #ifdef __WXMSW__

@@ -23,6 +23,8 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
                                  backgrounds on panes and toolbars
     -bug (Jeremy)                Layout: the model list no longer opens collapsed to its header row on a fresh
                                  setup
+    -bug (Jeremy)                Dark mode: read-only controller properties and the Note Import fields are no longer
+                                 light-on-light
     -enh (Jeremy)                Sequencer: Effect Settings, Color, Layer Blending and Layer Settings open as tabs of
                                  one inspector column by default; any settings window can be tabbed, detached or
                                  closed (View > Windows > Window Tabs), and the tabs are saved with each perspective
