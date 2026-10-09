@@ -29,6 +29,8 @@
 #include "utils/ExternalHooks.h"
 #include "xLightsVersion.h"
 #include "settings/XLightsConfigAdapter.h"
+
+#include <algorithm>
 #include "utils/CurlManager.h"
 #include "utils/string_utils.h"
 
@@ -437,6 +439,48 @@ void EnsureWindowHeaderIsOnScreen(wxWindow* win) {
         wxDisplay::GetFromPoint(wxPoint(pos.x + size.x, pos.y + headerHeight)) < 0) {
         // window header is not on screen
         win->Move(0, 0);
+    }
+    FitWindowToDisplay(win);
+}
+
+void FitWindowToDisplay(wxWindow* win) {
+    if (win == nullptr || !win->IsTopLevel()) {
+        return;
+    }
+    wxRect rect = win->GetRect();
+    // Work areas, not full bounds: a dialog whose buttons sit under the taskbar
+    // is not usable.
+    auto onDisplay = [](const wxPoint& pt) {
+        int d = wxDisplay::GetFromPoint(pt);
+        return d != wxNOT_FOUND && wxDisplay(d).GetClientArea().Contains(pt);
+    };
+    if (onDisplay(rect.GetTopLeft()) && onDisplay(rect.GetTopRight()) &&
+        onDisplay(rect.GetBottomLeft()) && onDisplay(rect.GetBottomRight())) {
+        return;
+    }
+
+    int d = wxDisplay::GetFromWindow(win);
+    if (d == wxNOT_FOUND) {
+        d = 0;
+    }
+    wxDisplay display(d);
+    if (!display.IsOk()) {
+        return;
+    }
+    const wxRect area = display.GetClientArea();
+
+    // A minimum size bigger than the screen would stop the window ever fitting.
+    wxSize minSize = win->GetMinSize();
+    if (minSize.x > area.width || minSize.y > area.height) {
+        win->SetMinSize(wxSize(std::min(minSize.x, area.width), std::min(minSize.y, area.height)));
+    }
+
+    rect.width = std::min(rect.width, area.width);
+    rect.height = std::min(rect.height, area.height);
+    rect.x = std::clamp(rect.x, area.x, area.GetRight() + 1 - rect.width);
+    rect.y = std::clamp(rect.y, area.y, area.GetBottom() + 1 - rect.height);
+    if (rect != win->GetRect()) {
+        win->SetSize(rect);
     }
 }
 

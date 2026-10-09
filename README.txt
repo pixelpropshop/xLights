@@ -12,6 +12,13 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
 ---------------------------------
 2026.19  October ??, 2026
 
+    -enh (Jeremy)                The main window remembers its size, position and maximized state, and opens
+                                 maximized the first time
+    -bug (Jeremy)                Dialogs restored from a saved position are kept on screen and no larger than the
+                                 monitor they open on
+    -bug (Jeremy)                Layout: properties pane is titled "Model Properties" for a selected model after a
+                                 layout loads, and the Start/End Chan columns fit their contents
+    -change (Jeremy)             Flat main Layout/Sequencer tabs; Tip of the Day opens at a smaller default size
     -bug (dkulp)                 Import Effects: copied images/videos/shaders/faces are now stored show-relative, so the
                                  next open no longer reports them all as relocated
     -enh (dkulp)                 Import Effects: offer to convert unsupported imported videos (e.g. AVI) during the

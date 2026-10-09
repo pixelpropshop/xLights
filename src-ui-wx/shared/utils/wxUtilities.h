@@ -127,6 +127,10 @@ void LoadWindowPosition(const std::string& tag, wxSize& size, wxPoint& position)
 void SaveInt(const std::string& tag, int value);
 int LoadInt(const std::string& tag, int defaultValue);
 void EnsureWindowHeaderIsOnScreen(wxWindow* win);
+// Shrinks and moves a top-level window so it sits on one display. Left alone when
+// every corner is already on some display, so a window deliberately spread across
+// monitors stays put.
+void FitWindowToDisplay(wxWindow* win);
 
 bool IsValidLocalIP(const wxIPV4address& ip);
 

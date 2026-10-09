@@ -181,6 +181,7 @@ class LayoutPanel: public wxPanel
         wxPanel* ModelPanelContainer = nullptr;
         wxPanel* SettingsPaneContainer = nullptr;   // "ModelSettings" pane window: propertyEditor / ModelGroupWindow / controllerProps
         void ShowSettingsPropGrid();
+        bool UpdateSettingsPaneCaption();
         wxPanel* _loadingOverlay = nullptr;
         wxStaticText* _loadingOverlayLabel = nullptr;
         wxAuiManager* layout_mgr = nullptr;
@@ -713,6 +714,7 @@ class LayoutPanel: public wxPanel
         };
         TreeChanColumns modelsTreeCols;
         TreeChanColumns groupsTreeCols;
+        void FitChannelColumns(wxTreeListCtrl* tree, const TreeChanColumns& cols);
 
         ModelPreview *modelPreview = nullptr;
         wxImage *background = nullptr;

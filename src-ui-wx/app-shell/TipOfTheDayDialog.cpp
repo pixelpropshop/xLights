@@ -142,9 +142,9 @@ TipOfTheDayDialog::TipOfTheDayDialog(const std::string& url, wxWindow* parent, w
     wxFlexGridSizer* FlexGridSizer2;
 
     Create(parent, id, _("Tip of the day"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX, _T("id"));
-    SetClientSize(wxSize(1000,800));
+    SetClientSize(wxSize(720,520));
     Move(wxDefaultPosition);
-    SetMinSize(wxSize(1000,800));
+    SetMinSize(wxSize(400,300));
     FlexGridSizer1 = new wxFlexGridSizer(2, 1, 0, 0);
     FlexGridSizer1->AddGrowableCol(0);
     FlexGridSizer1->AddGrowableRow(0);
@@ -175,7 +175,7 @@ TipOfTheDayDialog::TipOfTheDayDialog(const std::string& url, wxWindow* parent, w
     FlexGridSizer1->Replace(HtmlWindow1, webView);
 #endif
     
-    SetSize(1200, 800);
+    SetSize(FromDIP(wxSize(760, 560)));
     Layout();
     
     wxPoint loc;

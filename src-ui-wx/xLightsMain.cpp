@@ -352,6 +352,26 @@ const wxWindowID xLightsFrame::ID_MNU_SUPPRESSDOCK_HP = wxNewId();
 const wxWindowID xLightsFrame::ID_MNU_SUPPRESSDOCK_MP = wxNewId();
 const wxWindowID xLightsFrame::ID_MENUITEM3 = wxNewId();
 const wxWindowID xLightsFrame::ID_MENUITEM_WINDOWS_PERSPECTIVE = wxNewId();
+
+namespace {
+// Stores the main window's size, position and maximized state in the xLights
+// config so the window comes back where the user left it.
+class MainWindowGeometry : public wxTopLevelWindow::GeometrySerializer {
+public:
+    bool SaveField(const wxString& name, int value) const override {
+        GetXLightsConfig()->Write(Key(name), value);
+        return true;
+    }
+    bool RestoreField(const wxString& name, int* value) override {
+        return GetXLightsConfig()->Read(Key(name), value);
+    }
+
+private:
+    static std::string Key(const wxString& name) {
+        return "xLightsMainWindow" + name.ToStdString();
+    }
+};
+} // namespace
 const wxWindowID xLightsFrame::ID_MENUITEM_WINDOWS_DOCKALL = wxNewId();
 const wxWindowID xLightsFrame::ID_MENUITEM11 = wxNewId();
 const wxWindowID xLightsFrame::ID_MENUITEM10 = wxNewId();
@@ -1429,7 +1449,18 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     MainAuiManager->GetPane("Tools Tool Bar").Hide();
     MainAuiManager->Update();
 
-    Notebook1->SetArtProvider(new wxAuiGenericTabArt());
+    Notebook1->SetArtProvider(new wxAuiFlatTabArt());
+
+    // The designer's fixed client size is taller than many laptop screens, so
+    // use the saved geometry, or start maximized the first time.
+    if (!renderOnlyMode && GetXLightsConfig() != nullptr) {
+        MainWindowGeometry geometry;
+        if (RestoreToGeometry(geometry)) {
+            FitWindowToDisplay(this);
+        } else {
+            Maximize();
+        }
+    }
 
     auto* config = GetXLightsConfig();
     if (config == nullptr) {
@@ -3229,6 +3260,11 @@ void xLightsFrame::OnClose(wxCloseEvent& event)
     inClose = true;
 
     spdlog::info("xLights Closing");
+
+    if (!_renderMode && GetXLightsConfig() != nullptr) {
+        MainWindowGeometry geometry;
+        SaveGeometry(geometry);
+    }
 
     // Mark the frame as exiting up front so the teardown that CloseSequence drives
     // (e.g. EffectsGrid::SetRCToolTip touching an already half-destroyed window/peer)

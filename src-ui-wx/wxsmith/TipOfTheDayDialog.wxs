@@ -2,8 +2,8 @@
 <wxsmith>
 	<object class="wxDialog" name="TipOfTheDayDialog">
 		<title>Tip of the day</title>
-		<size>1000,800</size>
-		<minsize>1000,800</minsize>
+		<size>720,520</size>
+		<minsize>400,300</minsize>
 		<pos_arg>1</pos_arg>
 		<size_arg>1</size_arg>
 		<style>wxCAPTION|wxRESIZE_BORDER|wxCLOSE_BOX</style>

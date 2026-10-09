@@ -534,7 +534,6 @@ const long LayoutPanel::ID_SET_CENTER_OFFSET = wxNewId();
 const long LayoutPanel::ID_TEXTCTRL_MODEL_FILTER = wxNewId();
 const long LayoutPanel::ID_TEXTCTRL_GROUP_FILTER = wxNewId();
 
-#define CHNUMWIDTH "10000000000000"
 
 #define PlatformHandleSelectionChanged() HandleSelectionChanged()
 
@@ -1103,12 +1102,12 @@ LayoutPanel::LayoutPanel(wxWindow* parent, xLightsFrame *xl, wxPanel* sequencer)
     UpdateDirectoriesFooter();
 
     TreeListViewModels->SetColumnWidth(0, wxCOL_WIDTH_AUTOSIZE);
-    TreeListViewModels->SetColumnWidth(1, TreeListViewModels->WidthFor(CHNUMWIDTH));
-    TreeListViewModels->SetColumnWidth(2, TreeListViewModels->WidthFor(CHNUMWIDTH));
+    TreeListViewModels->SetColumnWidth(1, wxCOL_WIDTH_AUTOSIZE);
+    TreeListViewModels->SetColumnWidth(2, wxCOL_WIDTH_AUTOSIZE);
     TreeListViewModels->SetColumnWidth(3, wxCOL_WIDTH_AUTOSIZE);
     TreeListViewGroups->SetColumnWidth(0, wxCOL_WIDTH_AUTOSIZE);
-    TreeListViewGroups->SetColumnWidth(1, TreeListViewGroups->WidthFor(CHNUMWIDTH));
-    TreeListViewGroups->SetColumnWidth(2, TreeListViewGroups->WidthFor(CHNUMWIDTH));
+    TreeListViewGroups->SetColumnWidth(1, wxCOL_WIDTH_AUTOSIZE);
+    TreeListViewGroups->SetColumnWidth(2, wxCOL_WIDTH_AUTOSIZE);
     TreeListViewGroups->SetColumnWidth(3, wxCOL_WIDTH_AUTOSIZE);
 
 }
@@ -1169,14 +1168,14 @@ wxTreeListCtrl* LayoutPanel::CreateTreeListCtrl(long style, wxPanel* panel, long
     for (const auto& c : colNames) {
         if (c == STARTCHANCOLNAME) {
             tree->AppendColumn(STARTCHANCOLNAME,
-                tree->WidthFor(CHNUMWIDTH),
+                wxCOL_WIDTH_AUTOSIZE,
                 wxALIGN_LEFT,
                 wxCOL_RESIZABLE | wxCOL_SORTABLE | wxCOL_REORDERABLE);
             cols.startChan = i++;
         }
         else if (c == ENDCHANCOLNAME) {
             tree->AppendColumn(ENDCHANCOLNAME,
-                tree->WidthFor(CHNUMWIDTH),
+                wxCOL_WIDTH_AUTOSIZE,
                 wxALIGN_LEFT,
                 wxCOL_RESIZABLE | wxCOL_SORTABLE | wxCOL_REORDERABLE);
             cols.endChan = i++;
@@ -2050,6 +2049,24 @@ void LayoutPanel::refreshOneModelList(wxTreeListCtrl* tree, wxDataViewModel* int
         }
     }
     ThawTreeListView(tree, internalModel, toExpand, sortState);
+    FitChannelColumns(tree, cols);
+}
+
+// The channel columns hold "controller:start (absolute)" text whose width
+// depends on the controller names, so size them to the widest entry. The
+// control's own autosize only samples some of the rows.
+void LayoutPanel::FitChannelColumns(wxTreeListCtrl* tree, const TreeChanColumns& cols) {
+    const int padding = tree->FromDIP(24);
+    for (int col : { cols.startChan, cols.endChan }) {
+        int width = tree->GetTextExtent(tree->GetDataView()->GetColumn(col)->GetTitle()).x;
+        for (wxTreeListItem item = tree->GetFirstItem(); item.IsOk(); item = tree->GetNextItem(item)) {
+            width = std::max(width, tree->GetTextExtent(tree->GetItemText(item, col)).x);
+        }
+        width += padding;
+        if (tree->GetColumnWidth(col) != width) {
+            tree->SetColumnWidth(col, width);
+        }
+    }
 }
 
 void LayoutPanel::RenameModelInTree(Model *model, const std::string& new_name)
@@ -2237,6 +2254,8 @@ void LayoutPanel::UpdateModelList(bool full_refresh, std::vector<Model*> &models
 
     ThawTreeListView(TreeListViewModels, TreeListMiewInternalModel, toExpand, modelsSortState);
     ThawTreeListView(TreeListViewGroups, TreeListGroupsInternalModel, toExpandGroups, groupsSortState);
+    FitChannelColumns(TreeListViewModels, modelsTreeCols);
+    FitChannelColumns(TreeListViewGroups, groupsTreeCols);
 
     if (sw.Time() > 500)
         spdlog::debug("        LayoutPanel::UpdateModelList took {}ms", sw.Time());
@@ -4238,6 +4257,11 @@ void LayoutPanel::SetupPropGrid(BaseObject *base_object) {
     }
 
     ShowSettingsPropGrid();
+    // Only touch the manager when the caption changes: this also runs on every
+    // property-grid reload during a drag.
+    if (UpdateSettingsPaneCaption()) {
+        layout_mgr->Update();
+    }
 
     auto frozen = propertyEditor->IsFrozen();
     if (!frozen) propertyEditor->Freeze();
@@ -12402,6 +12426,7 @@ void LayoutPanel::ResetToDefaults() {
     // Also discard any saved sash position so the default 18% width is used on the
     // next float/dock cycle (UpdateLayoutSplitter reads _savedSashPos).
     _savedSashPos = -1;
+    UpdateSettingsPaneCaption();
     UpdateLayoutSplitter();
     layout_mgr->Update();
 
@@ -12492,14 +12517,48 @@ void LayoutPanel::ReapplyPaneAttributes() {
     }
     wxAuiPaneInfo& modelSettingsPane = layout_mgr->GetPane("ModelSettings");
     if (modelSettingsPane.IsOk()) {
-        wxString modelSettingsCaption = modelSettingsPane.caption;
-        if (modelSettingsCaption.IsEmpty()) {
-            modelSettingsCaption = "Model Settings";
-        }
         modelSettingsPane.MinSize(0, kPaneMinHeight).CaptionVisible(true)
-            .Caption(modelSettingsCaption)
             .Floatable(true).CloseButton(false).TopDockable(false).BottomDockable(false).LeftDockable(false).RightDockable(false);
     }
+    UpdateSettingsPaneCaption();
+}
+
+// A loaded perspective carries the caption that was showing when it was saved,
+// so the caption is always worked out from what is selected now.
+bool LayoutPanel::UpdateSettingsPaneCaption() {
+    if (layout_mgr == nullptr) {
+        return false;
+    }
+    wxAuiPaneInfo& pane = layout_mgr->GetPane("ModelSettings");
+    if (!pane.IsOk()) {
+        return false;
+    }
+    wxString caption = "Background Properties";
+    switch (CurrentObjectsPage()) {
+    case ObjectsPage::Controllers:
+        caption = "Controller Properties";
+        break;
+    case ObjectsPage::Groups:
+        if (selectedBaseObject != nullptr) {
+            caption = "Group Settings";
+        }
+        break;
+    case ObjectsPage::Objects:
+        if (selectedBaseObject != nullptr) {
+            caption = "Object Properties";
+        }
+        break;
+    default:
+        if (selectedBaseObject != nullptr) {
+            caption = "Model Properties";
+        }
+        break;
+    }
+    if (pane.caption == caption) {
+        return false;
+    }
+    pane.Caption(caption);
+    return true;
 }
 
 wxString LayoutPanel::GetLayoutPerspective() {
