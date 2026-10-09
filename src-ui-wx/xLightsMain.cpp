@@ -108,6 +108,7 @@
 #include "app-shell/RestoreBackupDialog.h"
 #include "sequencer/SeqSettingsDialog.h"
 #include "sequencer/SequencerWindowTabs.h"
+#include "shared/utils/ModernDockArt.h"
 #include "effects/ShaderDownloadDialog.h"
 #include "utils/ShowGuid.h"
 #include "utils/SpecialOptions.h"
@@ -1458,6 +1459,12 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
         }
     });
 
+    MainAuiManager->SetArtProvider(new ModernDockArt());
+    m_mgr->SetArtProvider(new ModernDockArt());
+    for (auto* bar : { MainToolBar, PlayToolBar, WindowMgmtToolbar, EditToolBar, ACToolbar, ViewToolBar, EffectsToolBar, ToolsToolBar }) {
+        bar->SetArtProvider(new ModernToolBarArt());
+        bar->Realize();
+    }
     MainAuiManager->GetPane("Tools Tool Bar").Hide();
     MainAuiManager->Update();
 

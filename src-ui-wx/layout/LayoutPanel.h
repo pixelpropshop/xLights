@@ -182,6 +182,8 @@ class LayoutPanel: public wxPanel
         wxPanel* SettingsPaneContainer = nullptr;   // "ModelSettings" pane window: propertyEditor / ModelGroupWindow / controllerProps
         void ShowSettingsPropGrid();
         bool UpdateSettingsPaneCaption();
+        void SetModelListDockHeight(int height);
+        bool _defaultListHeightApplied = false;
         wxPanel* _loadingOverlay = nullptr;
         wxStaticText* _loadingOverlayLabel = nullptr;
         wxAuiManager* layout_mgr = nullptr;

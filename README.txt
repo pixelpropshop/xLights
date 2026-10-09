@@ -19,6 +19,10 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
     -bug (Jeremy)                Layout: properties pane is titled "Model Properties" for a selected model after a
                                  layout loads, and the Start/End Chan columns fit their contents
     -change (Jeremy)             Flat main Layout/Sequencer tabs; Tip of the Day opens at a smaller default size
+    -change (Jeremy)             Flatter window chrome: pane titles in the normal UI font, and simpler grips and
+                                 backgrounds on panes and toolbars
+    -bug (Jeremy)                Layout: the model list no longer opens collapsed to its header row on a fresh
+                                 setup
     -enh (Jeremy)                Sequencer: Effect Settings, Color, Layer Blending and Layer Settings open as tabs of
                                  one inspector column by default; any settings window can be tabbed, detached or
                                  closed (View > Windows > Window Tabs), and the tabs are saved with each perspective

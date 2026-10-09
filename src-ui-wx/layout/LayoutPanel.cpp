@@ -81,6 +81,7 @@
 #include "model/ModelDimmingCurveDialog.h"
 #include "UtilFunctions.h"
 #include "shared/dialogs/CheckboxSelectDialog.h"
+#include "shared/utils/ModernDockArt.h"
 #include "shared/utils/ExternalHooksUI.h"
 #include "color/ColorManager.h"
 #include "utils/VectorMath.h"
@@ -160,29 +161,6 @@ static inline handles::Modifier ModsFromEvent(const wxKeyboardState& event) {
 // Left-panel target width is computed dynamically in UpdateLayoutSplitter() as
 // 18% of the splitter width (floor kMinPaneWidth) so it scales with screen resolution.
 
-// Custom AUI dock art to draw a modern, clean, subtle gripper instead of cluttered dots.
-class LayoutDockArt : public wxAuiDefaultDockArt {
-public:
-    void DrawGripper(wxDC& dc, wxWindow* window, const wxRect& rect, wxAuiPaneInfo& pane) override {
-        // Draw background using the standard 3D face color
-        dc.SetPen(*wxTRANSPARENT_PEN);
-        dc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE)));
-        dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height);
-
-        // Draw a modern, clean handle line in the center
-        dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW), 2));
-        int x_center = rect.x + rect.width / 2;
-        int y_center = rect.y + rect.height / 2;
-        if (rect.width > rect.height) {
-            // Horizontal gripper
-            dc.DrawLine(x_center - 25, y_center, x_center + 25, y_center);
-        } else {
-            // Vertical gripper
-            dc.DrawLine(x_center, y_center - 25, x_center, y_center + 25);
-        }
-    }
-};
-
 // Custom AUI manager with two enhancements:
 // 1. Floating frames always have wxCLOSE_BOX, regardless of pane CloseButton flag
 //    (lets us suppress the AUI caption close button while keeping the OS X button).
@@ -196,7 +174,7 @@ public:
 
     LayoutAuiManager(wxWindow* managed_wnd, unsigned int flags)
         : wxAuiManager(managed_wnd, flags) {
-        SetArtProvider(new LayoutDockArt());
+        SetArtProvider(new ModernDockArt());
         // wxAuiManager::SetManagedWindow (called from the base ctor above) now Bind()s the
         // base mouse handlers on managed_wnd instead of PushEventHandler()ing the manager,
         // so our overrides are no longer reached via the class event table. Bind them here:
@@ -1071,6 +1049,26 @@ LayoutPanel::LayoutPanel(wxWindow* parent, xLightsFrame *xl, wxPanel* sequencer)
     layout_mgr->Update();
     // Enable splitter auto-collapse / expand logic now that AUI is fully set up.
     _auiInitialized = true;
+
+    // Without a saved arrangement the first layout runs while the container is
+    // still unsized, and wxAUI caches the resulting near-zero height for the
+    // model list's dock. Size it once the container has real space.
+    if (auiPerspective.empty()) {
+        ModelPanelContainer->Bind(wxEVT_SIZE, [this](wxSizeEvent& event) {
+            event.Skip();
+            if (_defaultListHeightApplied || layout_mgr == nullptr) {
+                return;
+            }
+            const int height = ModelPanelContainer->GetClientSize().y;
+            if (height < ModelPanelContainer->FromDIP(300)) {
+                return;
+            }
+            _defaultListHeightApplied = true;
+            CallAfter([this, height]() {
+                SetModelListDockHeight(height * 2 / 5);
+            });
+        });
+    }
     UpdateLayoutSplitter();
 
     // Move 3D / Overlap / Save controls to a bar at the bottom-center of the
@@ -12521,6 +12519,28 @@ void LayoutPanel::ReapplyPaneAttributes() {
             .Floatable(true).CloseButton(false).TopDockable(false).BottomDockable(false).LeftDockable(false).RightDockable(false);
     }
     UpdateSettingsPaneCaption();
+}
+
+void LayoutPanel::SetModelListDockHeight(int height) {
+    wxAuiPaneInfo& pane = layout_mgr->GetPane("ModelList");
+    if (!pane.IsOk() || !pane.IsDocked() || pane.dock_direction != wxAUI_DOCK_TOP) {
+        return;
+    }
+    // Dock sizes are only reachable through the perspective string.
+    const wxString key = wxString::Format("dock_size(%d,%d,%d)=", pane.dock_direction, pane.dock_layer, pane.dock_row);
+    wxString perspective = layout_mgr->SavePerspective();
+    int start = perspective.Find(key);
+    if (start == wxNOT_FOUND) {
+        return;
+    }
+    start += key.length();
+    size_t end = perspective.find('|', start);
+    perspective = perspective.Left(start) + wxString::Format("%d", height) + (end == wxString::npos ? wxString() : perspective.Mid(end));
+    if (layout_mgr->LoadPerspective(perspective, false)) {
+        ReapplyPaneAttributes();
+        layout_mgr->Update();
+        UpdateLayoutSplitter();
+    }
 }
 
 // A loaded perspective carries the caption that was showing when it was saved,
