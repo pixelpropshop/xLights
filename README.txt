@@ -25,6 +25,8 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
                                  setup
     -bug (Jeremy)                Dark mode: read-only controller properties and the Note Import fields are no longer
                                  light-on-light
+    -enh (Jeremy)                Main toolbar icons are drawn from SVG so they stay sharp at any display scaling; other
+                                 icons are resampled smoothly instead of pixelating
     -enh (Jeremy)                Sequencer: Effect Settings, Color, Layer Blending and Layer Settings open as tabs of
                                  one inspector column by default; any settings window can be tabbed, detached or
                                  closed (View > Windows > Window Tabs), and the tabs are saved with each perspective

@@ -134,6 +134,7 @@
 
 #include "fpp_icon.h"
 #include "tools_toolbar_icons.h"
+#include "main_toolbar_icons.h"
 
 #include "wx/artprov.h"
 
@@ -196,7 +197,7 @@ public:
                     image.InitAlpha();
                 }
                 if (image.GetHeight() != size) {
-                    image.Rescale(bsize.GetWidth(),  bsize.GetHeight());
+                    image.Rescale(bsize.GetWidth(), bsize.GetHeight(), wxIMAGE_QUALITY_HIGH);
                 }
                 lastBitmap = wxBitmap(image);
             } else {
@@ -212,7 +213,7 @@ public:
                         if (image.HasMask() && !image.HasAlpha()) {
                             image.InitAlpha();
                         }
-                        image.Rescale(bsize.GetWidth(),  bsize.GetHeight());
+                        image.Rescale(bsize.GetWidth(), bsize.GetHeight(), wxIMAGE_QUALITY_HIGH);
                         lastBitmap = wxBitmap(image);
                         break;
                     }
@@ -267,7 +268,7 @@ wxBitmap xlNamedBitmapBundleImpl::GetBitmap(const wxSize& size) {
     // don't have an exact match size, but idx is pointing to the next largest so we'll
     // rescale that one down
     wxImage i = bitmaps[idx].ConvertToImage();
-    i.Rescale(newSize.GetX(), newSize.GetY());
+    i.Rescale(newSize.GetX(), newSize.GetY(), wxIMAGE_QUALITY_HIGH);
     lastBitmap = wxBitmap(i);
     if (idx == (int)(bitmaps.size() - 1) && newSize.GetY() > bitmaps[idx].GetHeight()) {
         // this is bigger than the last one in the list, we'll keep it
@@ -312,7 +313,7 @@ static wxBitmapBundle CreateBitmapBundleFromPNGs(const wxString &id,
     } else {
         wxMemoryInputStream stream(data, size);
         wxImage img(stream, wxBITMAP_TYPE_PNG);
-        img.Rescale(img.GetWidth() * 2, img.GetHeight() * 2);
+        img.Rescale(img.GetWidth() * 2, img.GetHeight() * 2, wxIMAGE_QUALITY_HIGH);
         bitmaps.push_back(wxBitmap(img));
     }
     return wxBitmapBundle::FromImpl(new xlNamedBitmapBundleImpl(id, bitmaps[0].GetSize(), bitmaps));
@@ -331,6 +332,62 @@ inline wxSize AdjustSizeForClient(const wxArtClient& client,
         }
     }
     return size;
+}
+
+// Toolbar icons that have SVG artwork are drawn from it, so they stay sharp at
+// any display scale instead of rescaling a fixed-size XPM.
+static wxBitmapBundle CreateMainToolbarSvgBundle(const wxArtID& id, int size) {
+    struct SvgIcon {
+        const char* id;
+        const unsigned char* data;
+        size_t len;
+    };
+    static const SvgIcon icons[] = {
+        { wxART_NEW, main_toolbar_new_sequence_svg, main_toolbar_new_sequence_svg_len },
+        { wxART_FILE_OPEN, main_toolbar_open_sequence_svg, main_toolbar_open_sequence_svg_len },
+        { wxART_FILE_SAVE, main_toolbar_save_svg, main_toolbar_save_svg_len },
+        { wxART_FILE_SAVE_AS, main_toolbar_save_as_svg, main_toolbar_save_as_svg_len },
+        { wxART_FOLDER_OPEN, main_toolbar_show_folder_svg, main_toolbar_show_folder_svg_len },
+        { "xlART_RENDER_ALL", main_toolbar_render_svg, main_toolbar_render_svg_len },
+        { "xlART_PASTE_BY_TIME", main_toolbar_paste_by_time_svg, main_toolbar_paste_by_time_svg_len },
+        { "xlART_PASTE_BY_CELL", main_toolbar_paste_by_cell_svg, main_toolbar_paste_by_cell_svg_len },
+        { "xlART_PLAY", main_toolbar_play_svg, main_toolbar_play_svg_len },
+        { "xlART_PAUSE", main_toolbar_pause_svg, main_toolbar_pause_svg_len },
+        { "xlART_STOP", main_toolbar_stop_svg, main_toolbar_stop_svg_len },
+        { "xlART_BACKWARD", main_toolbar_first_frame_svg, main_toolbar_first_frame_svg_len },
+        { "xlART_FORWARD", main_toolbar_last_frame_svg, main_toolbar_last_frame_svg_len },
+        { "xlART_REPLAY", main_toolbar_replay_svg, main_toolbar_replay_svg_len },
+        { "xlART_SETTINGS", main_toolbar_settings_svg, main_toolbar_settings_svg_len },
+        { "xlART_ZOOM_IN", main_toolbar_zoom_in_svg, main_toolbar_zoom_in_svg_len },
+        { "xlART_ZOOM_OUT", main_toolbar_zoom_out_svg, main_toolbar_zoom_out_svg_len },
+        { "xlART_MODEL_PREVIEW", main_toolbar_model_preview_svg, main_toolbar_model_preview_svg_len },
+        { "xlART_HOUSE_PREVIEW", main_toolbar_house_preview_svg, main_toolbar_house_preview_svg_len },
+        { "xlART_SEQUENCE_ELEMENTS", main_toolbar_display_elements_svg, main_toolbar_display_elements_svg_len },
+        { "xlART_EFFECTS", main_toolbar_effects_svg, main_toolbar_effects_svg_len },
+        { "xlART_COLORS", main_toolbar_effect_colors_svg, main_toolbar_effect_colors_svg_len },
+        { "xlART_EFFECTSETTINGS", main_toolbar_effect_settings_svg, main_toolbar_effect_settings_svg_len },
+        { "xlART_LAYERS", main_toolbar_layer_settings_svg, main_toolbar_layer_settings_svg_len },
+        { "xlART_LAYERS2", main_toolbar_layer_blending_svg, main_toolbar_layer_blending_svg_len },
+        { "xlAC_ON", main_toolbar_ac_on_svg, main_toolbar_ac_on_svg_len },
+        { "xlAC_OFF", main_toolbar_ac_off_svg, main_toolbar_ac_off_svg_len },
+        { "xlAC_SELECT", main_toolbar_ac_select_svg, main_toolbar_ac_select_svg_len },
+        { "xlAC_SHIMMER", main_toolbar_ac_shimmer_svg, main_toolbar_ac_shimmer_svg_len },
+        { "xlAC_TWINKLE", main_toolbar_ac_twinkle_svg, main_toolbar_ac_twinkle_svg_len },
+        { "xlAC_INTENSITY", main_toolbar_ac_intensity_svg, main_toolbar_ac_intensity_svg_len },
+        { "xlAC_RAMPUP", main_toolbar_ac_ramp_up_svg, main_toolbar_ac_ramp_up_svg_len },
+        { "xlAC_RAMPDOWN", main_toolbar_ac_ramp_down_svg, main_toolbar_ac_ramp_down_svg_len },
+        { "xlAC_RAMPUPDOWN", main_toolbar_ac_ramp_up_down_svg, main_toolbar_ac_ramp_up_down_svg_len },
+        { "xlAC_FILL", main_toolbar_ac_fill_svg, main_toolbar_ac_fill_svg_len },
+        { "xlAC_CASCADE", main_toolbar_ac_cascade_svg, main_toolbar_ac_cascade_svg_len },
+        { "xlAC_FOREGROUND", main_toolbar_ac_foreground_svg, main_toolbar_ac_foreground_svg_len },
+        { "xlAC_BACKGROUND", main_toolbar_ac_background_svg, main_toolbar_ac_background_svg_len },
+    };
+    for (const auto& icon : icons) {
+        if (id == icon.id) {
+            return wxBitmapBundle::FromSVG(icon.data, icon.len, wxSize(size, size));
+        }
+    }
+    return wxBitmapBundle();
 }
 
 wxBitmapBundle xlArtProvider::CreateBitmapBundle(const wxArtID& id,
@@ -358,6 +415,12 @@ wxBitmapBundle xlArtProvider::CreateBitmapBundle(const wxArtID& id,
         return wxOSXCreateSystemBitmapBundle("dice", AdjustSizeForClient(client, size));
     }
 #endif
+    if (sz > 0) {
+        wxBitmapBundle svg = CreateMainToolbarSvgBundle(id, sz);
+        if (svg.IsOk()) {
+            return svg;
+        }
+    }
     if ("xlART_STOP_NOW" == id) {
         return CreateBitmapBundleFromXPMs(sz, id, {stop_sign_16, stop_sign_24, stop_sign_32, stop_sign_48, stop_sign_64});
     } else if ("xlART_LIGHTS_OFF" == id) {
