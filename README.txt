@@ -28,7 +28,8 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
     -enh (Jeremy)                Main toolbar icons are drawn from SVG so they stay sharp at any display scaling; other
                                  icons are resampled smoothly instead of pixelating
     -enh (Jeremy)                New single-color line icons for the toolbars that follow light and dark mode; the original
-                                 icons remain available (Preferences > View > Toolbar Icons)
+                                 icons remain available (Preferences > View > Toolbar Icons); value curve, palette lock and
+                                 randomize buttons and the Layout model buttons use them too
     -enh (Jeremy)                New "Stage" sequencer grid colors for new shows, with a Classic Colors button to restore the
                                  original palette (Preferences > Colors)
     -enh (Jeremy)                Effects in the sequencer grid are tinted by effect type (Preferences > View > Tint Effects By Type)

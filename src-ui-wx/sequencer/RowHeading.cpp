@@ -2618,10 +2618,10 @@ void RowHeading::render( wxPaintEvent& event )
     wxCoord w,h;
     dc.GetSize(&w,&h);
     xlColor rowHeaderCol = ColorManager::instance()->GetColor(ColorManager::COLOR_ROW_HEADER);
-    xlColor outlineCol(32, 32, 32);
+    xlColor outlineCol(205, 208, 214);
     bool isDark = IsDarkMode();
     if (isDark) {
-        outlineCol.Set(55, 55, 55);
+        outlineCol.Set(40, 44, 52);
     }
     wxPen penOutline(xlColorToWxColour(outlineCol));
 

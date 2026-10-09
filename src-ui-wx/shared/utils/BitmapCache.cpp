@@ -416,11 +416,13 @@ wxBitmapBundle xlArtProvider::CreateBitmapBundle(const wxArtID& id,
         return wxOSXCreateSystemBitmapBundle("dice", AdjustSizeForClient(client, size));
     }
 #endif
-    if (sz > 0) {
+    {
         wxBitmapBundle line = CreateLineIconBundle(id, sz);
         if (line.IsOk()) {
             return line;
         }
+    }
+    if (sz > 0) {
         wxBitmapBundle svg = CreateMainToolbarSvgBundle(id, sz);
         if (svg.IsOk()) {
             return svg;

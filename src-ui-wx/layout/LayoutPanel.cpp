@@ -82,6 +82,7 @@
 #include "UtilFunctions.h"
 #include "shared/dialogs/CheckboxSelectDialog.h"
 #include "shared/utils/ModernDockArt.h"
+#include "shared/utils/LineIcons.h"
 #include "shared/utils/ExternalHooksUI.h"
 #include "color/ColorManager.h"
 #include "utils/VectorMath.h"
@@ -1246,6 +1247,10 @@ std::string LayoutPanel::GetCurrentPreview() const
 NewModelBitmapButton* LayoutPanel::AddModelButton(const std::string &type, const char *data[]) {
 
     wxImage image(data);
+    wxBitmapBundle line = CreateLineIconBundle("xlART_" + type + "_ICON", 64);
+    if (line.IsOk()) {
+        image = line.GetBitmap(wxSize(64, 64)).ConvertToImage();
+    }
     int iconSize = PreviewGLPanel->FromDIP(xlights->ToolIconSize());
     NewModelBitmapButton *button = new NewModelBitmapButton(PreviewGLPanel, image, iconSize, type);
     ToolSizer->Add(button, 1, wxALL, 0);

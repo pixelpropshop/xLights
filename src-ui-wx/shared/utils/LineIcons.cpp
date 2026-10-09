@@ -23,6 +23,9 @@ struct LineIcon {
     const char* path;
     bool filled;
     Tint tint;
+    // Size used when the caller asks for none (wxART_BUTTON), matching the
+    // bitmap the icon replaces.
+    int defaultSize = 0;
 };
 
 // 24x24 grid, 1.8 stroke, round caps and joins.
@@ -84,6 +87,54 @@ const LineIcon ICONS[] = {
     { "xlAC_CASCADE", "M3 20h4v-4h4v-4h4V8h4V4", false, Tint::Normal },
     { "xlAC_FOREGROUND", "M3 3h11v4M3 3v11h4M10 10h11v11H10z", false, Tint::Normal },
     { "xlAC_BACKGROUND", "M3 3h11v11H3zM17 10h4v11H10v-4", false, Tint::Normal },
+    // Effect and color panel buttons
+    { "xlART_valuecurve_notselected", "M3 17c4 0 4-10 9-10s5 10 9 10", false, Tint::Normal, 24 },
+    { "xlART_valuecurve_selected", "M3 17c4 0 4-10 9-10s5 10 9 10", false, Tint::Accent, 24 },
+    { "xlART_PADLOCK_OPEN", "M7 11V7a5 5 0 0 1 9.9-1M5 11h14v10H5z", false, Tint::Normal, 14 },
+    { "xlART_PADLOCK_CLOSED", "M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z", false, Tint::Accent, 14 },
+    { "xlART_DICE_ICON", "M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01", false, Tint::Normal, 24 },
+    { "xlART_colorpanel_reverse_xpm", "M4 8h15l-4-4M20 16H5l4 4", false, Tint::Normal, 16 },
+    { "xlART_colorpanel_left_shift_xpm", "M20 12H5M11 6l-6 6 6 6", false, Tint::Normal, 16 },
+    { "xlART_colorpanel_right_shift_xpm", "M4 12h15M13 6l6 6-6 6", false, Tint::Normal, 16 },
+    // Model types (Layout tab buttons and model lists)
+    { "xlART_Arches_ICON", "M2 20a5 5 0 0 1 10 0M12 20a5 5 0 0 1 10 0", false, Tint::Normal },
+    { "xlART_ARCH_ICON", "M2 20a5 5 0 0 1 10 0M12 20a5 5 0 0 1 10 0", false, Tint::Normal },
+    { "xlART_Candy Canes_ICON", "M9 21V8a3.5 3.5 0 0 1 7 0v1", false, Tint::Normal },
+    { "xlART_CANE_ICON", "M9 21V8a3.5 3.5 0 0 1 7 0v1", false, Tint::Normal },
+    { "xlART_Channel Block_ICON", "M3 8h4v8H3zM10 8h4v8h-4zM17 8h4v8h-4z", false, Tint::Normal },
+    { "xlART_CHANNELBLOCK_ICON", "M3 8h4v8H3zM10 8h4v8h-4zM17 8h4v8h-4z", false, Tint::Normal },
+    { "xlART_Circle_ICON", "M12 12m-8 0a8 8 0 1 0 16 0a8 8 0 1 0-16 0", false, Tint::Normal },
+    { "xlART_CIRCLE_ICON", "M12 12m-8 0a8 8 0 1 0 16 0a8 8 0 1 0-16 0", false, Tint::Normal },
+    { "xlART_Cube_ICON", "M12 2l9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10", false, Tint::Normal },
+    { "xlART_CUBE_ICON", "M12 2l9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10", false, Tint::Normal },
+    { "xlART_Custom_ICON", "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z", false, Tint::Normal },
+    { "xlART_CUSTOM_ICON", "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z", false, Tint::Normal },
+    { "xlART_DMX_ICON", "M8 21h8M12 17v4M7 4h10l-2 10H9z", false, Tint::Normal },
+    { "xlART_Icicles_ICON", "M3 5h18M5 5v6M9 5v10M13 5v5M17 5v9M21 5v4", false, Tint::Normal },
+    { "xlART_ICICLE_ICON", "M3 5h18M5 5v6M9 5v10M13 5v5M17 5v9M21 5v4", false, Tint::Normal },
+    { "xlART_Image_ICON", "M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9h.01", false, Tint::Normal },
+    { "xlART_IMAGE_ICON", "M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9h.01", false, Tint::Normal },
+    { "xlART_Label_ICON", "M4 6h16M12 6v13M8 19h8", false, Tint::Normal },
+    { "xlART_LABEL_ICON", "M4 6h16M12 6v13M8 19h8", false, Tint::Normal },
+    { "xlART_Matrix_ICON", "M4 4h16v16H4zM4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16", false, Tint::Normal },
+    { "xlART_MATRIX_ICON", "M4 4h16v16H4zM4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16", false, Tint::Normal },
+    { "xlART_Poly Line_ICON", "M3 18l5-9 5 5 8-10", false, Tint::Normal },
+    { "xlART_POLY_ICON", "M3 18l5-9 5 5 8-10", false, Tint::Normal },
+    { "xlART_Single Line_ICON", "M3 18L21 6", false, Tint::Normal },
+    { "xlART_LINE_ICON", "M3 18L21 6", false, Tint::Normal },
+    { "xlART_Sphere_ICON", "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18", false, Tint::Normal },
+    { "xlART_SPHERE_ICON", "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18", false, Tint::Normal },
+    { "xlART_Spinner_ICON", "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4", false, Tint::Normal },
+    { "xlART_SPINNER_ICON", "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4", false, Tint::Normal },
+    { "xlART_Star_ICON", "M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6-4.5-4.1 6-.7z", false, Tint::Normal },
+    { "xlART_STAR_ICON", "M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6-4.5-4.1 6-.7z", false, Tint::Normal },
+    { "xlART_Tree_ICON", "M12 2L4 20h16zM12 2v18", false, Tint::Normal },
+    { "xlART_TREE_ICON", "M12 2L4 20h16zM12 2v18", false, Tint::Normal },
+    { "xlART_Window Frame_ICON", "M4 4h16v16H4zM8 8h8v8H8z", false, Tint::Normal },
+    { "xlART_WINDOW_ICON", "M4 4h16v16H4zM8 8h8v8H8z", false, Tint::Normal },
+    { "xlART_Download_ICON", "M12 3v12M7 10l5 5 5-5M5 21h14", false, Tint::Normal },
+    { "xlART_Import Custom_ICON", "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11v6M9 14l3 3 3-3", false, Tint::Normal },
+    { "xlART_Add Object_ICON", "M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 8v6M9 11h6", false, Tint::Normal },
 };
 
 wxString Hex(const wxColour& c) {
@@ -113,12 +164,18 @@ void SetUseLineIcons(bool line) {
 }
 
 wxBitmapBundle CreateLineIconBundle(const wxString& artId, int size) {
-    if (size <= 0 || !UseLineIcons()) {
+    if (!UseLineIcons()) {
         return wxBitmapBundle();
     }
     for (const auto& icon : ICONS) {
         if (artId != icon.id) {
             continue;
+        }
+        if (size <= 0) {
+            size = icon.defaultSize;
+            if (size <= 0) {
+                return wxBitmapBundle();
+            }
         }
         const bool dark = IsDarkMode();
         const wxColour color = icon.tint == Tint::Accent ? (dark ? wxColour(242, 169, 59) : wxColour(201, 133, 18))
