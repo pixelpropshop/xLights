@@ -1718,6 +1718,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     config->Read("xLightsZoomMethodToCursor", &_zoomMethodToCursor, true);
     config->Read("xLightsTintEffectsByType", &_tintEffectsByType, true);
     config->Read("xLightsWorkspaceRail", &_workspaceRail, false);
+    config->Read("xLightsGridEffectBlocks", &_gridEffectBlocks, true);
     spdlog::debug("Zoom Method To Cursor: {}.", toStr(_zoomMethodToCursor));
 
     config->Read("xLightsHidePresetPreview", &_hidePresetPreview, false);
@@ -2411,6 +2412,7 @@ xLightsFrame::~xLightsFrame()
     config->Write("xLightsZoomMethodToCursor", _zoomMethodToCursor);
     config->Write("xLightsTintEffectsByType", _tintEffectsByType);
     config->Write("xLightsWorkspaceRail", _workspaceRail);
+    config->Write("xLightsGridEffectBlocks", _gridEffectBlocks);
     config->Write("xLightsHidePresetPreview", _hidePresetPreview);
     config->Write("xLightsSmallWaveform", _smallWaveform);
     config->Write("xLightsRenderBell", _renderBellEnabled);
@@ -7712,6 +7714,16 @@ void xLightsFrame::SetHousePreviewKeepOnTop(bool b)
 void xLightsFrame::SetZoomMethodToCursor(bool b)
 {
     _zoomMethodToCursor = b;
+}
+
+void xLightsFrame::SetGridEffectBlocks(bool blocks)
+{
+    if (_gridEffectBlocks != blocks) {
+        _gridEffectBlocks = blocks;
+        if (mainSequencer != nullptr) {
+            mainSequencer->PanelEffectGrid->Refresh(false);
+        }
+    }
 }
 
 void xLightsFrame::SetWorkspaceRail(bool rail)

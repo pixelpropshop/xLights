@@ -154,6 +154,18 @@ ViewSettingsPanel::ViewSettingsPanel(wxWindow* parent, xLightsFrame* f, wxWindow
     _workspaceSwitcherChoice->Append(_("Side Rail"));
     _workspaceSwitcherChoice->SetToolTip(_("Switch between Layout and Sequencer with the tabs, or with a bar on the left side of the window."));
     GridBagSizer1->Add(_workspaceSwitcherChoice, wxGBPosition(14, 1), wxDefaultSpan, wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    auto* effectStyleLabel = new wxStaticText(this, wxID_ANY, _("Grid Effect Style"));
+    GridBagSizer1->Add(effectStyleLabel, wxGBPosition(15, 0), wxDefaultSpan, wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    _gridEffectStyleChoice = new wxChoice(this, wxID_ANY);
+    _gridEffectStyleChoice->Append(_("Blocks"));
+    _gridEffectStyleChoice->Append(_("Classic"));
+    _gridEffectStyleChoice->SetToolTip(_("Blocks: each effect is a filled block with its icon and name. Classic: outlines with the icon in the middle."));
+    GridBagSizer1->Add(_gridEffectStyleChoice, wxGBPosition(15, 1), wxDefaultSpan, wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    _gridEffectStyleChoice->Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
+        if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
+            TransferDataFromWindow();
+        }
+    });
     _workspaceSwitcherChoice->Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
         if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
             TransferDataFromWindow();
@@ -197,6 +209,7 @@ bool ViewSettingsPanel::TransferDataToWindow()
     _toolbarIconStyleChoice->SetSelection(SavedUseLineIcons() ? 0 : 1);
     _tintEffectsCheckBox->SetValue(frame->TintEffectsByType());
     _workspaceSwitcherChoice->SetSelection(frame->WorkspaceRailShown() ? 1 : 0);
+    _gridEffectStyleChoice->SetSelection(frame->GridEffectBlocks() ? 0 : 1);
     int ts = frame->ToolIconSize();
     switch (ts) {
     case 48:
@@ -252,6 +265,7 @@ bool ViewSettingsPanel::TransferDataFromWindow()
     frame->SetHidePresetPreview(CheckBox_PresetPreview->IsChecked());
     frame->SetPaletteSizeString(Choice_PaletteSize->GetStringSelection());
     frame->SetTintEffectsByType(_tintEffectsCheckBox->IsChecked());
+    frame->SetGridEffectBlocks(_gridEffectStyleChoice->GetSelection() == 0);
     if ((_workspaceSwitcherChoice->GetSelection() == 1) != frame->WorkspaceRailShown()) {
         frame->SetWorkspaceRail(_workspaceSwitcherChoice->GetSelection() == 1);
     }

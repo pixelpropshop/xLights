@@ -66,6 +66,7 @@ class ViewSettingsPanel: public wxPanel
         wxChoice* _toolbarIconStyleChoice = nullptr;
         wxCheckBox* _tintEffectsCheckBox = nullptr;
         wxChoice* _workspaceSwitcherChoice = nullptr;
+        wxChoice* _gridEffectStyleChoice = nullptr;
 
 		//(*Handlers(ViewSettingsPanel)
 		void OnToolIconSizeChoiceSelect(wxCommandEvent& event);

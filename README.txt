@@ -33,6 +33,8 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
     -enh (Jeremy)                New "Stage" sequencer grid colors for new shows, with a Classic Colors button to restore the
                                  original palette (Preferences > Colors)
     -enh (Jeremy)                Effects in the sequencer grid are tinted by effect type (Preferences > View > Tint Effects By Type)
+    -enh (Jeremy)                Effects in the sequencer grid are drawn as blocks with their icon and name; the classic
+                                 outline style remains available (Preferences > View > Grid Effect Style)
     -bug (Jeremy)                Sequencer grid rows are sized for 125-200% display scaling on Windows and Linux
     -bug (Jeremy)                Sequencer timeline: selection lines and markers are visible in dark mode; amber play
                                  marker, theme colors and two tick heights

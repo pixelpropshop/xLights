@@ -1174,6 +1174,7 @@ public:
     bool _zoomMethodToCursor = true;
     bool _tintEffectsByType = true;
     bool _workspaceRail = false;
+    bool _gridEffectBlocks = true;
     xlAuiToolBar* WorkspaceRail = nullptr;
     wxStaticText* _toolbarTime = nullptr;
     bool _hidePresetPreview = false;
@@ -1453,6 +1454,8 @@ public:
     bool TintEffectsByType() const { return _tintEffectsByType; }
     void SetTintEffectsByType(bool b);
     bool WorkspaceRailShown() const { return _workspaceRail; }
+    bool GridEffectBlocks() const { return _gridEffectBlocks; }
+    void SetGridEffectBlocks(bool blocks);
     void SetWorkspaceRail(bool rail);
     void UpdateWorkspaceRail();
     void SetToolbarTime(const wxString& time);

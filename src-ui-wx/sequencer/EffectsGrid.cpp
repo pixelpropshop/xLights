@@ -7606,6 +7606,20 @@ int EffectsGrid::DrawEffectBackground(const Row_Information_Struct* ri, const Ef
     return result;
 }
 
+// The grid's text uses pre-rendered font atlases. Sizes between them are
+// generated on the fly and their glyphs come out misaligned, which DPI-scaled
+// rows otherwise ask for (23 at 150%), so use the largest built-in size that fits.
+static float BuiltInFontSize(float size) {
+    static const int sizes[] = { 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 40, 44, 56, 88 };
+    int best = sizes[0];
+    for (int s : sizes) {
+        if (s <= size) {
+            best = s;
+        }
+    }
+    return best;
+}
+
 float ComputeFontSize(int& toffset, const float factor) {
     double fontSize = DEFAULT_ROW_HEADING_HEIGHT - 10;
     toffset = 0;
@@ -7643,8 +7657,22 @@ static xlColor EffectTypeTint(const Effect* e) {
     return c;
 }
 
+// Fill for an effect drawn as a block: its type color, or a neutral gray when
+// type tinting is off, stronger when the effect is selected.
+static xlColor EffectBlockFill(const Effect* e, bool typeColor, const xlColor& neutral) {
+    xlColor c = typeColor ? EffectTypeTint(e) : neutral;
+    c.alpha = e->GetSelected() == EFFECT_SELECTED ? 120 : 80;
+    return c;
+}
+
 void EffectsGrid::DrawEffects(xlGraphicsContext* ctx) {
     int width = getWidth();
+    const bool blocks = xlights->GridEffectBlocks();
+    const float textFactor = translateToBacking(1.0);
+    int textOffset = 0;
+    ComputeFontSize(textOffset, textFactor);
+    const xlFontInfo& labelFont = xlFontInfo::FindFont(curFontSize);
+    const xlColor neutralFill = xlights->color_mgr.GetColor(ColorManager::COLOR_EFFECT_DEFAULT);
     for (int row = 0; row < (int)mSequenceElements->GetVisibleRowInformationSize(); row++) {
         Row_Information_Struct* ri = mSequenceElements->GetVisibleRowInformation(row);
         if (ri->element->GetType() == ElementType::ELEMENT_TYPE_TIMING) {
@@ -7804,9 +7832,14 @@ void EffectsGrid::DrawEffects(xlGraphicsContext* ctx) {
                 if (mGridIconBackgrounds && (ri->nodeIndex == -1 || !mGridNodeValues)) {
                     drawIcon = DrawEffectBackground(ri, e, x3, y1, x4, y2, backgrounds);
                 }
-                // Tint only where the effect drew no background of its own.
-                if (drawIcon == 1 && xlights->TintEffectsByType() && !(mGridNodeValues && ri->nodeIndex != -1)) {
-                    backgrounds->AddRectAsTriangles(x3, y1, x4, y2, EffectTypeTint(e));
+                // Fill only where the effect drew no background of its own.
+                if (drawIcon == 1 && !(mGridNodeValues && ri->nodeIndex != -1)) {
+                    if (blocks) {
+                        backgrounds->AddRectAsTriangles(std::max(x3, x1 + 1), y1, std::min(x4, x2 - 1), y2,
+                                                        EffectBlockFill(e, xlights->TintEffectsByType(), neutralFill));
+                    } else if (xlights->TintEffectsByType()) {
+                        backgrounds->AddRectAsTriangles(x3, y1, x4, y2, EffectTypeTint(e));
+                    }
                 }
                 if (mGridNodeValues && ri->nodeIndex != -1) {
                     drawIcon = 2;
@@ -7816,7 +7849,47 @@ void EffectsGrid::DrawEffects(xlGraphicsContext* ctx) {
                     drawIcon = 0;
                 }
 
-                if (mode != EFFECT_SCREEN_MODE::SCREEN_L_R_OFF) {
+                if (blocks && !(mGridNodeValues && ri->nodeIndex != -1)) {
+                    // Block: an outline in the state colors, the icon at the left and the
+                    // effect name after it. Neighbours keep a 1px gap.
+                    const bool leftVisible = mode == EFFECT_SCREEN_MODE::SCREEN_L_R_ON || mode == EFFECT_SCREEN_MODE::SCREEN_L_ON;
+                    const bool rightVisible = mode == EFFECT_SCREEN_MODE::SCREEN_L_R_ON || mode == EFFECT_SCREEN_MODE::SCREEN_R_ON;
+                    const float lx = leftVisible ? x1 + 1 : x3;
+                    const float rx = rightVisible ? x2 - 1 : x4;
+                    if (rx > lx) {
+                        if (leftVisible) {
+                            linesLeft->AddVertex(lx, y1);
+                            linesLeft->AddVertex(lx, y2);
+                        }
+                        if (rightVisible) {
+                            linesRight->AddVertex(rx, y1);
+                            linesRight->AddVertex(rx, y2);
+                        }
+                        linesCenter->AddVertex(lx, y1);
+                        linesCenter->AddVertex(rx, y1);
+                        linesCenter->AddVertex(lx, y2);
+                        linesCenter->AddVertex(rx, y2);
+
+                        const float iconSize = y2 - y1 - 4;
+                        if (drawIcon && rx - lx > iconSize + 6) {
+                            const float ix = lx + 3;
+                            effectIcons->AddTexture(ix, y - iconSize / 2, ix + iconSize, y + iconSize / 2,
+                                                    effectIconLocations[e->GetEffectIndex()][0],
+                                                    effectIconLocations[e->GetEffectIndex()][1],
+                                                    effectIconLocations[e->GetEffectIndex()][0] + 64.0f / 512.0f,
+                                                    effectIconLocations[e->GetEffectIndex()][1] + 64.0f / 512.0f);
+                            const float textX = ix + iconSize + 4;
+                            const float available = rx - textX - 3;
+                            if (drawIcon == 1 && available > labelFont.widthOf("Ab", textFactor)) {
+                                std::string name = e->GetEffectName();
+                                while (!name.empty() && labelFont.widthOf(name, textFactor) > available) {
+                                    name.pop_back();
+                                }
+                                labelFont.populate(*effectLabels, textX, ((row + 1) * DEFAULT_ROW_HEADING_HEIGHT) - 4 + textOffset, name, textFactor);
+                            }
+                        }
+                    }
+                } else if (mode != EFFECT_SCREEN_MODE::SCREEN_L_R_OFF) {
                     if (mode == EFFECT_SCREEN_MODE::SCREEN_L_R_ON || mode == EFFECT_SCREEN_MODE::SCREEN_L_ON) {
                         if (effectIndex > 0) {
                             // Draw left line if effect has different start time then previous effect or
@@ -7931,6 +8004,7 @@ void EffectsGrid::DrawEffects(xlGraphicsContext* ctx) {
     ctx->drawLines(timingLines->Flush());
 
     ctx->drawTexture(texts->Flush(), fontTexture);
+    ctx->drawTexture(effectLabels->Flush(), fontTexture, xlColor(238, 240, 244));
     ctx->drawTriangles(selectedBoxes->Flush());
     ctx->disableBlending();
 }
@@ -8163,6 +8237,7 @@ void EffectsGrid::Draw() {
         backgrounds = ctx->createVertexColorAccumulator()->SetName("EffectBackgrounds");
         selectedBoxes = ctx->createVertexColorAccumulator()->SetName("SelectedBoxes");
         texts = ctx->createVertexTextureAccumulator()->SetName("TextLabels");
+        effectLabels = ctx->createVertexTextureAccumulator()->SetName("EffectLabels");
         effectIcons = ctx->createVertexTextureAccumulator()->SetName("EffectIcons");
     } else {
         timingLines->Reset();
@@ -8170,6 +8245,7 @@ void EffectsGrid::Draw() {
         selectedLinesFixed->Reset();
         selectedLinesLocked->Reset();
         texts->Reset();
+        effectLabels->Reset();
         backgrounds->Reset();
         selectedBoxes->Reset();
         selectedLines->Reset();
@@ -8198,7 +8274,7 @@ void EffectsGrid::Draw() {
     if (mSequenceElements) {
         float factor = translateToBacking(1.0);
         int toffset;
-        float fontSize = ComputeFontSize(toffset, factor) * factor;
+        float fontSize = BuiltInFontSize(ComputeFontSize(toffset, factor) * factor);
         if (curFontSize != fontSize) {
             if (fontTexture) {
                 delete fontTexture;

@@ -351,6 +351,7 @@ private:
     xlVertexColorAccumulator *selectedBoxes = nullptr;
 
     xlVertexTextureAccumulator *texts = nullptr;
+    xlVertexTextureAccumulator *effectLabels = nullptr;
     xlTexture *fontTexture = nullptr;
     int curFontSize = 0;
 
