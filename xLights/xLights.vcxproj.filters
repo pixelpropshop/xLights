@@ -1559,6 +1559,7 @@
     <ClCompile Include="..\src-ui-wx\shared\utils\TreeListColumnVisibility.cpp" />
     <ClCompile Include="..\src-ui-wx\shared\utils\wxUtilities.cpp" />
     <ClCompile Include="..\src-ui-wx\shared\utils\ModernDockArt.cpp" />
+    <ClCompile Include="..\src-ui-wx\shared\utils\LineIcons.cpp" />
     <ClCompile Include="..\src-core\media\StemSeparator.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -3214,6 +3215,7 @@
     <ClInclude Include="..\src-ui-wx\shared\utils\TreeListColumnVisibility.h" />
     <ClInclude Include="..\src-ui-wx\shared\utils\wxUtilities.h" />
     <ClInclude Include="..\src-ui-wx\shared\utils\ModernDockArt.h" />
+    <ClInclude Include="..\src-ui-wx\shared\utils\LineIcons.h" />
     <ClInclude Include="..\src-ui-wx\shared\utils\wxFilterQuery.h" />
   </ItemGroup>
   <ItemGroup>

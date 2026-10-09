@@ -63,6 +63,8 @@ class ViewSettingsPanel: public wxPanel
 
 	private:
         xLightsFrame *frame;
+        wxChoice* _toolbarIconStyleChoice = nullptr;
+        wxCheckBox* _tintEffectsCheckBox = nullptr;
 
 		//(*Handlers(ViewSettingsPanel)
 		void OnToolIconSizeChoiceSelect(wxCommandEvent& event);

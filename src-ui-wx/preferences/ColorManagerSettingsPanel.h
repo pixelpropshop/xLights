@@ -63,6 +63,7 @@ class ColorManagerSettingsPanel: public wxPanel
 		void OnButtonImportClick(wxCommandEvent& event);
 		void OnButtonExportClick(wxCommandEvent& event);
 		void OnButton_ResetClick(wxCommandEvent& event);
+		void OnButtonClassicClick(wxCommandEvent& event);
 		void ColorButtonSelected(wxCommandEvent& event);
 		void OnCheckBox_SuppressDarkModeClick(wxCommandEvent& event);
 		//*)

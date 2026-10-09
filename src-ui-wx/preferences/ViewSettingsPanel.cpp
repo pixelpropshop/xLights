@@ -21,6 +21,7 @@
 
 #include "../graphics/xlGraphicsBase.h"
 #include "xLightsMain.h"
+#include "shared/utils/LineIcons.h"
 #include <wx/preferences.h>
 
 //(*IdInit(ViewSettingsPanel)
@@ -136,6 +137,28 @@ ViewSettingsPanel::ViewSettingsPanel(wxWindow* parent, xLightsFrame* f, wxWindow
     Connect(ID_CHOICE_PALETTE_SIZE, wxEVT_COMMAND_CHOICE_SELECTED, (wxObjectEventFunction)&ViewSettingsPanel::OnChoice_PaletteSizeSelect);
     //*)
 
+    auto* iconStyleLabel = new wxStaticText(this, wxID_ANY, _("Toolbar Icons"));
+    GridBagSizer1->Add(iconStyleLabel, wxGBPosition(12, 0), wxDefaultSpan, wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    _toolbarIconStyleChoice = new wxChoice(this, wxID_ANY);
+    _toolbarIconStyleChoice->Append(_("Line"));
+    _toolbarIconStyleChoice->Append(_("Classic"));
+    _toolbarIconStyleChoice->SetToolTip(_("Line: single-color icons that follow light and dark mode. Classic: the original colored icons. Takes effect after restarting xLights."));
+    GridBagSizer1->Add(_toolbarIconStyleChoice, wxGBPosition(12, 1), wxDefaultSpan, wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    _tintEffectsCheckBox = new wxCheckBox(this, wxID_ANY, _("Tint Effects By Type"));
+    _tintEffectsCheckBox->SetToolTip(_("Fill each effect in the sequencer grid with a light color for its effect type."));
+    GridBagSizer1->Add(_tintEffectsCheckBox, wxGBPosition(13, 0), wxGBSpan(1, 2), wxALL | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL, 5);
+    _tintEffectsCheckBox->Bind(wxEVT_CHECKBOX, [this](wxCommandEvent&) {
+        if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
+            TransferDataFromWindow();
+        }
+    });
+    _toolbarIconStyleChoice->Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
+        if (wxPreferencesEditor::ShouldApplyChangesImmediately()) {
+            TransferDataFromWindow();
+        }
+    });
+    GridBagSizer1->SetSizeHints(this);
+
 #ifdef _MSC_VER
     MSWDisableComposited();
 #endif
@@ -159,6 +182,8 @@ bool ViewSettingsPanel::TransferDataToWindow()
     EffectAssistChoice->SetSelection(i);
     ModelHandleSizeChoice->SetSelection(frame->GetModelHandleSize());
     CrosshairSizeChoice->SetSelection(frame->GetCrosshairSize());
+    _toolbarIconStyleChoice->SetSelection(SavedUseLineIcons() ? 0 : 1);
+    _tintEffectsCheckBox->SetValue(frame->TintEffectsByType());
     int ts = frame->ToolIconSize();
     switch (ts) {
     case 48:
@@ -213,6 +238,11 @@ bool ViewSettingsPanel::TransferDataFromWindow()
     frame->SetTimelineZooming(Choice_TimelineZooming->GetSelection());
     frame->SetHidePresetPreview(CheckBox_PresetPreview->IsChecked());
     frame->SetPaletteSizeString(Choice_PaletteSize->GetStringSelection());
+    frame->SetTintEffectsByType(_tintEffectsCheckBox->IsChecked());
+    const bool line = _toolbarIconStyleChoice->GetSelection() == 0;
+    if (line != SavedUseLineIcons()) {
+        SetUseLineIcons(line);
+    }
     return true;
 }
 

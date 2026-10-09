@@ -101,7 +101,10 @@ class ColorManager
 
         void SysColorChanged();
         void RefreshColors();
+        // The defaults are the Stage palette; ResetToClassic restores the
+        // original xLights colors.
         void ResetDefaults();
+        void ResetToClassic();
         const xlColor GetTimingColor(int colorIndex);
         void SetNewColor(std::string name, xlColor& color);
         xlColor GetColor(ColorNames name);
@@ -168,6 +171,7 @@ class ColorManager
     protected:
 
     private:
+        void ResetToTable();
         std::map<std::string, xlColor> colors;
         std::map<std::string, xlColor> colors_backup;
         std::map<std::string, xlColor> colors_default;

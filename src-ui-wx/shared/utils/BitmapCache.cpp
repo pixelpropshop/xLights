@@ -135,6 +135,7 @@
 #include "fpp_icon.h"
 #include "tools_toolbar_icons.h"
 #include "main_toolbar_icons.h"
+#include "LineIcons.h"
 
 #include "wx/artprov.h"
 
@@ -416,6 +417,10 @@ wxBitmapBundle xlArtProvider::CreateBitmapBundle(const wxArtID& id,
     }
 #endif
     if (sz > 0) {
+        wxBitmapBundle line = CreateLineIconBundle(id, sz);
+        if (line.IsOk()) {
+            return line;
+        }
         wxBitmapBundle svg = CreateMainToolbarSvgBundle(id, sz);
         if (svg.IsOk()) {
             return svg;

@@ -60,7 +60,63 @@ void ColorManager::SysColorChanged() {
 }
 
 
+namespace {
+// One warm accent for selection and softer timing, label and waveform colors.
+// Colors that follow a system color are not listed.
+const std::map<std::string, xlColor>& StageColors() {
+    static const std::map<std::string, xlColor> stage = {
+        { "Timing1", xlColor(63, 182, 198) },
+        { "Timing2", xlColor(232, 115, 90) },
+        { "Timing3", xlColor(91, 191, 122) },
+        { "Timing4", xlColor(76, 141, 246) },
+        { "Timing5", xlColor(224, 192, 74) },
+        { "TimingDefault", xlColor(201, 206, 216) },
+        { "EffectDefault", xlColor(141, 149, 165) },
+        { "EffectSelected", xlColor(242, 169, 59) },
+        { "ReferenceEffect", xlColor(243, 244, 247) },
+        { "ReferenceEffectLocked", xlColor(255, 122, 122) },
+        { "ReferenceEffectDisabled", xlColor(230, 224, 154) },
+        { "EffectSelectedFixed", xlColor(63, 182, 198) },
+        { "EffectSelectedLocked", xlColor(232, 138, 158) },
+        { "EffectSelectedDisabled", xlColor(212, 196, 106) },
+        { "DisabledEffect", xlColor(154, 143, 74) },
+        { "LockedEffect", xlColor(194, 82, 74) },
+        { "RowHeaderSelected", xlColor(74, 58, 28) },
+        { "GridDashes", xlColor(242, 169, 59) },
+        { "Gridlines", xlColor(34, 38, 46) },
+        { "Labels", xlColor(231, 233, 238) },
+        { "LabelOutline", xlColor(58, 64, 76) },
+        { "Phrases", xlColor(127, 211, 155) },
+        { "Words", xlColor(242, 199, 123) },
+        { "Phonemes", xlColor(232, 154, 192) },
+        { "Waveform", xlColor(94, 107, 133) },
+        { "WaveformSelected", xlColor(242, 169, 59, 40) },
+        { "WaveformSelectedEffect", xlColor(242, 169, 59) },
+        { "WaveformMouseMarker", xlColor(76, 141, 246) },
+        { "ModelSelected", xlColor(242, 169, 59) },
+        { "LayoutDashes", xlColor(242, 169, 59) },
+    };
+    return stage;
+}
+} // namespace
+
 void ColorManager::ResetDefaults()
+{
+    ResetToTable();
+    for (const auto& [name, color] : StageColors()) {
+        auto it = colors.find(name);
+        if (it != colors.end()) {
+            it->second = color;
+        }
+    }
+}
+
+void ColorManager::ResetToClassic()
+{
+    ResetToTable();
+}
+
+void ColorManager::ResetToTable()
 {
     colors.clear();
     colors_system.clear();

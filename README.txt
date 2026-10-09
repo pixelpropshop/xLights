@@ -27,6 +27,12 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
                                  light-on-light
     -enh (Jeremy)                Main toolbar icons are drawn from SVG so they stay sharp at any display scaling; other
                                  icons are resampled smoothly instead of pixelating
+    -enh (Jeremy)                New single-color line icons for the toolbars that follow light and dark mode; the original
+                                 icons remain available (Preferences > View > Toolbar Icons)
+    -enh (Jeremy)                New "Stage" sequencer grid colors for new shows, with a Classic Colors button to restore the
+                                 original palette (Preferences > Colors)
+    -enh (Jeremy)                Effects in the sequencer grid are tinted by effect type (Preferences > View > Tint Effects By Type)
+    -bug (Jeremy)                Sequencer grid rows are sized for 125-200% display scaling on Windows and Linux
     -enh (Jeremy)                Sequencer: Effect Settings, Color, Layer Blending and Layer Settings open as tabs of
                                  one inspector column by default; any settings window can be tabbed, detached or
                                  closed (View > Windows > Window Tabs), and the tabs are saved with each perspective

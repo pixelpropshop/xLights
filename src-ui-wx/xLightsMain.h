@@ -1172,6 +1172,7 @@ public:
     bool _autoShowHousePreview = false;
     bool _housePreviewKeepOnTop = false;
     bool _zoomMethodToCursor = true;
+    bool _tintEffectsByType = true;
     bool _hidePresetPreview = false;
     bool _disableKeyAcceleration = false;
     bool _smallWaveform = false;
@@ -1446,6 +1447,8 @@ public:
 
     bool ZoomMethodToCursor() const { return _zoomMethodToCursor;}
     void SetZoomMethodToCursor(bool b);
+    bool TintEffectsByType() const { return _tintEffectsByType; }
+    void SetTintEffectsByType(bool b);
 
     int EffectAssistMode() const { return mEffectAssistMode;}
     void SetEffectAssistMode(int i);

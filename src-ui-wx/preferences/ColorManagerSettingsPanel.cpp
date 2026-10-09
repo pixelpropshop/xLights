@@ -95,6 +95,12 @@ ColorManagerSettingsPanel::ColorManagerSettingsPanel(wxWindow* parent, xLightsFr
     CheckBox_SuppressDarkMode->Show(false);
     #endif
 
+    Button_Reset->SetToolTip(_("Reset every color to the default Stage colors."));
+    auto* classicButton = new wxButton(this, wxID_ANY, _("Classic Colors"));
+    classicButton->SetToolTip(_("Reset every color to the original xLights colors."));
+    FlexGridSizer7->Add(classicButton, 1, wxALL | wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL, 5);
+    classicButton->Bind(wxEVT_BUTTON, &ColorManagerSettingsPanel::OnButtonClassicClick, this);
+
     #ifdef _MSC_VER
     MSWDisableComposited();
     #endif
@@ -229,6 +235,16 @@ void ColorManagerSettingsPanel::OnButtonExportClick(wxCommandEvent& event) {
         themeXml.save_file(ToStdString(dlg.GetPath()).c_str());
     }
 }
+void ColorManagerSettingsPanel::OnButtonClassicClick(wxCommandEvent& event) {
+    if (wxMessageBox("Replace all colors with the classic xLights colors?", "Are you sure?", wxYES_NO | wxCENTER, this) == wxNO) {
+        return;
+    }
+    frame->color_mgr.ResetToClassic();
+    UpdateButtonColors();
+    RefreshColors();
+    frame->color_mgr.SetDirty();
+}
+
 void ColorManagerSettingsPanel::OnButton_ResetClick(wxCommandEvent& event) {
     if (wxMessageBox("Are you sure you want to reset all colors to the defaults?", "Are you sure?", wxYES_NO | wxCENTER, this) == wxNO) {
         return;

@@ -1673,6 +1673,7 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     spdlog::debug("House Preview Keep on Top: {}.", toStr(_housePreviewKeepOnTop));
 
     config->Read("xLightsZoomMethodToCursor", &_zoomMethodToCursor, true);
+    config->Read("xLightsTintEffectsByType", &_tintEffectsByType, true);
     spdlog::debug("Zoom Method To Cursor: {}.", toStr(_zoomMethodToCursor));
 
     config->Read("xLightsHidePresetPreview", &_hidePresetPreview, false);
@@ -1985,6 +1986,10 @@ xLightsFrame::xLightsFrame(wxWindow* parent, int ab, wxWindowID id, bool renderO
     mGridSpacingPreference = mGridSpacing;
     SetGridSpacing(mGridSpacing);
     spdlog::debug("Grid spacing: {}.", mGridSpacing);
+    Bind(wxEVT_DPI_CHANGED, [this](wxDPIChangedEvent& event) {
+        event.Skip();
+        SetGridSpacing(mGridSpacing);
+    });
 
     config->Read("xLightsGridIconBackgrounds", &mGridIconBackgrounds, true);
     SetGridIconBackgrounds(mGridIconBackgrounds);
@@ -2357,6 +2362,7 @@ xLightsFrame::~xLightsFrame()
     config->Write("xLightsShowBaseFolder", _showBaseShowFolder);
     config->Write("xLightsAutoShowHousePreview", _autoShowHousePreview);
     config->Write("xLightsZoomMethodToCursor", _zoomMethodToCursor);
+    config->Write("xLightsTintEffectsByType", _tintEffectsByType);
     config->Write("xLightsHidePresetPreview", _hidePresetPreview);
     config->Write("xLightsSmallWaveform", _smallWaveform);
     config->Write("xLightsRenderBell", _renderBellEnabled);
@@ -4018,7 +4024,9 @@ void AUIToolbarButtonWrapper::Enable(bool b)
 void xLightsFrame::SetGridSpacing(int size)
 {
     mGridSpacing = size;
-    DEFAULT_ROW_HEADING_HEIGHT = size + 6;
+    // In DIPs, so rows keep their size at 125-200% display scaling on Windows
+    // and Linux the way they already do on macOS.
+    DEFAULT_ROW_HEADING_HEIGHT = mainSequencer->FromDIP(size + 6);
     mainSequencer->PanelRowHeadings->Refresh();
     mainSequencer->PanelEffectGrid->Refresh();
 }
@@ -7655,6 +7663,16 @@ void xLightsFrame::SetHousePreviewKeepOnTop(bool b)
 void xLightsFrame::SetZoomMethodToCursor(bool b)
 {
     _zoomMethodToCursor = b;
+}
+
+void xLightsFrame::SetTintEffectsByType(bool b)
+{
+    if (_tintEffectsByType != b) {
+        _tintEffectsByType = b;
+        if (mainSequencer != nullptr) {
+            mainSequencer->PanelEffectGrid->Refresh(false);
+        }
+    }
 }
 
 void xLightsFrame::SetHidePresetPreview(bool b)

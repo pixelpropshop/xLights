@@ -7621,6 +7621,28 @@ float ComputeFontSize(int& toffset, const float factor) {
     return fontSize;
 }
 
+// Effects that share a family get the same hue; the rest take one from the
+// list by effect index, so every effect type keeps a stable color.
+static xlColor EffectTypeTint(const Effect* e) {
+    static const std::map<std::string, xlColor> named = {
+        { "On", xlColor(91, 191, 122) }, { "Color Wash", xlColor(232, 163, 61) }, { "Bars", xlColor(76, 141, 246) },
+        { "Butterfly", xlColor(160, 123, 240) }, { "Spirals", xlColor(63, 182, 198) }, { "Twinkle", xlColor(229, 107, 159) },
+        { "Shockwave", xlColor(232, 115, 90) }, { "Fire", xlColor(242, 104, 60) }, { "Meteors", xlColor(111, 211, 184) },
+        { "Text", xlColor(201, 206, 216) }, { "Plasma", xlColor(212, 107, 224) }, { "Pinwheel", xlColor(240, 138, 75) },
+        { "Faces", xlColor(217, 195, 91) }, { "Shimmer", xlColor(127, 200, 248) }, { "Snowflakes", xlColor(158, 201, 255) },
+        { "Marquee", xlColor(224, 192, 74) }, { "Wave", xlColor(90, 169, 230) }, { "Pictures", xlColor(139, 149, 167) },
+        { "Video", xlColor(139, 149, 167) }, { "Single Strand", xlColor(76, 141, 246) }, { "Fill", xlColor(232, 163, 61) }
+    };
+    static const xlColor others[] = {
+        xlColor(91, 191, 122), xlColor(232, 163, 61), xlColor(76, 141, 246), xlColor(160, 123, 240), xlColor(63, 182, 198),
+        xlColor(229, 107, 159), xlColor(232, 115, 90), xlColor(111, 211, 184), xlColor(212, 107, 224), xlColor(240, 138, 75)
+    };
+    auto it = named.find(e->GetEffectName());
+    xlColor c = it != named.end() ? it->second : others[std::abs(e->GetEffectIndex()) % (sizeof(others) / sizeof(others[0]))];
+    c.alpha = 64;
+    return c;
+}
+
 void EffectsGrid::DrawEffects(xlGraphicsContext* ctx) {
     int width = getWidth();
     for (int row = 0; row < (int)mSequenceElements->GetVisibleRowInformationSize(); row++) {
@@ -7781,6 +7803,10 @@ void EffectsGrid::DrawEffects(xlGraphicsContext* ctx) {
                 int drawIcon = 1;
                 if (mGridIconBackgrounds && (ri->nodeIndex == -1 || !mGridNodeValues)) {
                     drawIcon = DrawEffectBackground(ri, e, x3, y1, x4, y2, backgrounds);
+                }
+                // Tint only where the effect drew no background of its own.
+                if (drawIcon == 1 && xlights->TintEffectsByType() && !(mGridNodeValues && ri->nodeIndex != -1)) {
+                    backgrounds->AddRectAsTriangles(x3, y1, x4, y2, EffectTypeTint(e));
                 }
                 if (mGridNodeValues && ri->nodeIndex != -1) {
                     drawIcon = 2;
