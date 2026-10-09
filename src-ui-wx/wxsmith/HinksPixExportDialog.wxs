@@ -11,7 +11,7 @@
 			<growablerows>0</growablerows>
 			<object class="sizeritem">
 				<object class="wxNotebook" name="ID_NOTEBOOK_EXPORT_ITEMS" variable="NotebookExportItems" member="yes">
-					<minsize>1100,400</minsize>
+					<minsize>700,400</minsize>
 					<object class="notebookpage">
 						<object class="wxScrolledWindow" name="ID_SCROLLEDWINDOW1" variable="HinkControllerList" member="yes">
 							<pos>-124,-53</pos>

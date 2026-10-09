@@ -228,7 +228,7 @@ HinksPixExportDialog::HinksPixExportDialog(wxWindow* parent, OutputManager* outp
 	FlexGridSizer1->AddGrowableCol(0);
 	FlexGridSizer1->AddGrowableRow(0);
 	NotebookExportItems = new wxNotebook(this, ID_NOTEBOOK_EXPORT_ITEMS, wxDefaultPosition, wxDefaultSize, 0, _T("ID_NOTEBOOK_EXPORT_ITEMS"));
-	NotebookExportItems->SetMinSize(wxSize(1100,400));
+	NotebookExportItems->SetMinSize(wxSize(700,400));
 	HinkControllerList = new wxScrolledWindow(NotebookExportItems, ID_SCROLLEDWINDOW1, wxPoint(-124,-53), wxDefaultSize, wxVSCROLL|wxHSCROLL, _T("ID_SCROLLEDWINDOW1"));
 	HinkControllerList->SetMinSize(wxDLG_UNIT(NotebookExportItems,wxSize(-1,150)));
 	HinkControllerSizer = new wxFlexGridSizer(0, 9, 0, 0);

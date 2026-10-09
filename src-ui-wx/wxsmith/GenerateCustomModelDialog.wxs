@@ -11,7 +11,7 @@
 			<growablerows>0</growablerows>
 			<object class="sizeritem">
 				<object class="wxAuiNotebook" name="ID_AUINOTEBOOK1" variable="AuiNotebook1" member="yes">
-					<size>1400,700</size>
+					<size>1000,640</size>
 					<style>wxTAB_TRAVERSAL</style>
 					<object class="AuiNotebookPage">
 						<object class="wxPanel" name="ID_PANEL_Prepare" variable="Panel_Prepare" member="yes">

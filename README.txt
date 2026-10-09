@@ -14,8 +14,8 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
 
     -enh (Jeremy)                The main window remembers its size, position and maximized state, and opens
                                  maximized the first time
-    -bug (Jeremy)                Dialogs restored from a saved position are kept on screen and no larger than the
-                                 monitor they open on
+    -bug (Jeremy)                Every dialog opens on screen and no larger than the monitor it opens on, including
+                                 dialogs restored from a saved position
     -bug (Jeremy)                Layout: properties pane is titled "Model Properties" for a selected model after a
                                  layout loads, and the Start/End Chan columns fit their contents
     -change (Jeremy)             Flat main Layout/Sequencer tabs; Tip of the Day opens at a smaller default size

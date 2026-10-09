@@ -823,6 +823,14 @@ int FilterMouseWheel(wxMouseEvent& event)
 
 int xLightsApp::FilterEvent(wxEvent& event)
 {
+    if (event.GetEventType() == wxEVT_SHOW) {
+        // Every dialog opens inside one monitor's usable area, whatever size
+        // its code or a saved position asked for.
+        auto* dialog = wxDynamicCast(event.GetEventObject(), wxDialog);
+        if (dialog != nullptr && static_cast<wxShowEvent&>(event).IsShown()) {
+            FitWindowToDisplay(dialog);
+        }
+    }
 #ifndef __WXMSW__
     const wxEventType type = event.GetEventType();
     if (type == wxEVT_MOUSEWHEEL) {
