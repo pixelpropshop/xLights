@@ -135,6 +135,18 @@ const LineIcon ICONS[] = {
     { "xlART_Download_ICON", "M12 3v12M7 10l5 5 5-5M5 21h14", false, Tint::Normal },
     { "xlART_Import Custom_ICON", "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11v6M9 14l3 3 3-3", false, Tint::Normal },
     { "xlART_Add Object_ICON", "M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 8v6M9 11h6", false, Tint::Normal },
+    // Preferences pages
+    { "xlART_PREF_BACKUP", "M3 3h18v4H3zM4 7v13h16V7M10 12h4", false, Tint::Normal },
+    { "xlART_PREF_VIEW", "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0", false, Tint::Normal },
+    { "xlART_PREF_GRID", "M3 5h18v14H3zM3 10h18M3 15h18M9 5v14M15 5v14", false, Tint::Normal },
+    { "xlART_PREF_SEQUENCES", "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M10 11v6l5-3z", false, Tint::Normal },
+    { "xlART_PREF_OUTPUT", "M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z", false, Tint::Normal },
+    { "xlART_PREF_CHECK", "M9 3h6v3H9zM8 4.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5.5a1 1 0 0 0-1-1h-2M9 14l2 2 4-4", false, Tint::Normal },
+    { "xlART_PREF_RANDOM", "M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01", false, Tint::Normal },
+    { "xlART_PREF_COLORS", "M12 3a9 9 0 1 0 0 18c1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5C21 6.2 17 3 12 3zM7.5 11.5h.01M10 7.5h.01M15 8h.01", false, Tint::Normal },
+    { "xlART_PREF_OTHER", "M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 6a2 2 0 1 0 0 .01M9 12a2 2 0 1 0 0 .01M17 18a2 2 0 1 0 0 .01", false, Tint::Normal },
+    { "xlART_PREF_TOOLBARS", "M3 4h18v6H3zM6 7h.01M10 7h.01M14 7h.01M3 14h11v6H3z", false, Tint::Normal },
+    { "xlART_PREF_SERVICES", "M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5", false, Tint::Normal },
 };
 
 wxString Hex(const wxColour& c) {

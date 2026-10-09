@@ -37,6 +37,7 @@ XLIGHTS/NUTCRACKER RELEASE NOTES
     -bug (Jeremy)                Sequencer timeline: selection lines and markers are visible in dark mode; amber play
                                  marker, theme colors and two tick heights
     -change (Jeremy)             Effect panels show labeled sections with a header line instead of a group box
+    -change (Jeremy)             Windows/Linux: Preferences has a page list with an icon per page and a title on each page
     -enh (Jeremy)                Sequencer: Effect Settings, Color, Layer Blending and Layer Settings open as tabs of
                                  one inspector column by default; any settings window can be tabbed, detached or
                                  closed (View > Windows > Window Tabs), and the tabs are saved with each perspective

@@ -14,10 +14,14 @@
 #include <wx/preferences.h>
 #include <wx/artprov.h>
 #include <wx/bmpbndl.h>
-#include <wx/listbook.h>
+#include <wx/simplebook.h>
+#include <wx/statline.h>
+#include <wx/vlbox.h>
 #include <wx/scrolwin.h>
 
 #include "xLightsMain.h"
+#include "shared/utils/LineIcons.h"
+#include "shared/utils/wxUtilities.h"
 
 #include "ViewSettingsPanel.h"
 #include "EffectsGridSettingsPanel.h"
@@ -101,25 +105,84 @@ private:
 };
 
 #ifndef __WXOSX__
-// A preferences dialog with a vertical list of pages on the left selects
-// the panel shown on the right (instead of tabs across the top). Used on
-// Windows/Linux; macOS keeps the native preferences window.
+namespace {
+wxColour MixColour(const wxColour& a, const wxColour& b, double amount) {
+    auto m = [amount](unsigned char x, unsigned char y) {
+        return (unsigned char)(x + (y - x) * amount);
+    };
+    return wxColour(m(a.Red(), b.Red()), m(a.Green(), b.Green()), m(a.Blue(), b.Blue()));
+}
+
+// The page list: one row per page, icon and name, the selected row tinted
+// with the accent. Owner-drawn so it looks the same on Windows and Linux.
+class PrefPageList : public wxVListBox {
+public:
+    PrefPageList(wxWindow* parent, const std::vector<PrefPageDef>& pages) :
+        wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE), _pages(pages) {
+        SetItemCount(_pages.size());
+        SetBackgroundColour(MixColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE), wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT), 0.04));
+        int width = 0;
+        wxClientDC dc(this);
+        dc.SetFont(GetFont().Bold());
+        for (const auto& p : _pages) {
+            width = std::max(width, dc.GetTextExtent(p.name).x);
+        }
+        // Tall enough to list every page without scrolling.
+        SetMinSize(wxSize(width + FromDIP(64), (int)_pages.size() * FromDIP(36) + FromDIP(12)));
+    }
+
+protected:
+    wxCoord OnMeasureItem(size_t) const override {
+        return FromDIP(36);
+    }
+
+    void OnDrawBackground(wxDC& dc, const wxRect& rect, size_t n) const override {
+        if (!IsSelected(n)) {
+            return;
+        }
+        const bool dark = IsDarkMode();
+        wxColour accent = dark ? wxColour(242, 169, 59) : wxColour(201, 133, 18);
+        wxRect r = rect.Deflate(FromDIP(6), FromDIP(2));
+        dc.SetPen(*wxTRANSPARENT_PEN);
+        dc.SetBrush(wxBrush(MixColour(GetBackgroundColour(), accent, dark ? 0.22 : 0.18)));
+        dc.DrawRoundedRectangle(r, FromDIP(6));
+    }
+
+    void OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const override {
+        const PrefPageDef& page = _pages[n];
+        const bool selected = IsSelected(n);
+        int x = rect.x + FromDIP(16);
+        const wxBitmap icon = page.listIcon.GetBitmapFor(this);
+        if (icon.IsOk()) {
+            const wxSize sz = icon.GetLogicalSize();
+            dc.DrawBitmap(icon, x, rect.y + (rect.height - sz.y) / 2, true);
+            x += sz.x + FromDIP(10);
+        }
+        dc.SetFont(selected ? GetFont().Bold() : GetFont());
+        dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
+        const wxSize text = dc.GetTextExtent(page.name);
+        dc.DrawText(page.name, x, rect.y + (rect.height - text.y) / 2);
+    }
+
+private:
+    const std::vector<PrefPageDef>& _pages;
+};
+} // namespace
+
+// Preferences on Windows/Linux: a list of pages on the left selects the page
+// shown on the right, each under its own title. macOS keeps the native
+// preferences window.
 class xlPreferencesListDialog : public wxDialog {
 public:
     xlPreferencesListDialog(wxWindow* parent, const std::vector<PrefPageDef>& pages, const wxString& initialPage = wxEmptyString)
-        : wxDialog(parent, wxID_ANY, _("Preferences"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
+        : wxDialog(parent, wxID_ANY, _("Preferences"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER), _pages(pages) {
         // Ensure every page's TransferDataTo/FromWindow runs on open and OK.
         SetExtraStyle(GetExtraStyle() | wxWS_EX_VALIDATE_RECURSIVELY);
 
         auto* topSizer = new wxBoxSizer(wxVERTICAL);
-        auto* listbook = new wxListbook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_LEFT);
-
-        std::vector<wxBitmapBundle> images;
-        images.reserve(pages.size());
-        for (const auto& p : pages) {
-            images.push_back(p.listIcon);
-        }
-        listbook->SetImages(images);
+        auto* body = new wxBoxSizer(wxHORIZONTAL);
+        auto* list = new PrefPageList(this, _pages);
+        auto* book = new wxSimplebook(this, wxID_ANY);
 
         const wxSize screenSize = wxGetDisplaySize();
         int minWidth = std::min((int)(screenSize.GetWidth() * 0.90), 850);
@@ -127,9 +190,18 @@ public:
 
         int idx = 0;
         int selectIdx = 0;
-        for (const auto& p : pages) {
+        for (const auto& p : _pages) {
+            auto* page = new wxPanel(book, wxID_ANY);
+            auto* pageSizer = new wxBoxSizer(wxVERTICAL);
+            auto* title = new wxStaticText(page, wxID_ANY, p.name);
+            wxFont titleFont = title->GetFont().Bold();
+            titleFont.SetFractionalPointSize(titleFont.GetFractionalPointSize() * 1.35);
+            title->SetFont(titleFont);
+            pageSizer->Add(title, 0, wxLEFT | wxRIGHT | wxTOP, FromDIP(14));
+            pageSizer->Add(new wxStaticLine(page, wxID_ANY), 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, FromDIP(10));
+
             // Wrap each panel in a scrolled window so tall panels stay usable.
-            auto* scrolledWindow = new wxScrolledWindow(listbook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL);
+            auto* scrolledWindow = new wxScrolledWindow(page, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL);
             scrolledWindow->SetScrollRate(10, 10);
             wxWindow* content = p.factory(scrolledWindow);
             auto* sizer = new wxBoxSizer(wxVERTICAL);
@@ -137,23 +209,39 @@ public:
             scrolledWindow->SetSizer(sizer);
             scrolledWindow->FitInside();
             scrolledWindow->SetMinSize(wxSize(minWidth, minHeight));
+            pageSizer->Add(scrolledWindow, 1, wxEXPAND | wxLEFT | wxRIGHT, FromDIP(8));
+            page->SetSizer(pageSizer);
 
-            listbook->AddPage(scrolledWindow, p.name, false, idx);
+            book->AddPage(page, p.name, false);
             if (!initialPage.IsEmpty() && p.name == initialPage) {
                 selectIdx = idx;
             }
             ++idx;
         }
-        listbook->SetSelection(selectIdx);
+        book->SetSelection(selectIdx);
+        list->SetSelection(selectIdx);
+        list->Bind(wxEVT_LISTBOX, [book, list](wxCommandEvent&) {
+            if (list->GetSelection() != wxNOT_FOUND) {
+                book->SetSelection(list->GetSelection());
+            }
+        });
 
-        topSizer->Add(listbook, 1, wxEXPAND | wxALL, 5);
-        topSizer->Add(CreateStdDialogButtonSizer(wxOK | wxCANCEL), 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+        body->Add(list, 0, wxEXPAND);
+        body->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL), 0, wxEXPAND);
+        body->Add(book, 1, wxEXPAND);
+        topSizer->Add(body, 1, wxEXPAND);
+        topSizer->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND);
+        topSizer->Add(CreateStdDialogButtonSizer(wxOK | wxCANCEL), 0, wxEXPAND | wxALL, FromDIP(8));
 
         SetSizer(topSizer);
         topSizer->SetSizeHints(this);
         Fit();
         CentreOnParent();
+        FitWindowToDisplay(this);
     }
+
+private:
+    std::vector<PrefPageDef> _pages;
 };
 #endif
 
@@ -190,52 +278,57 @@ void xLightsFrame::ShowPreferencesDialog(const wxString& initialPage)
     auto scaledBundle = [](const wxImage& img, const wxSize& sz) {
         return wxBitmapBundle(wxBitmap(img.Scale(sz.GetWidth(), sz.GetHeight(), wxIMAGE_QUALITY_HIGH)));
     };
+    // Each page's own line icon in the page list, or the classic icon.
+    auto listIcon = [&listIconSize](const char* lineId, const wxBitmapBundle& classic) {
+        wxBitmapBundle line = CreateLineIconBundle(lineId, listIconSize.GetWidth());
+        return line.IsOk() ? line : classic;
+    };
 
     std::vector<PrefPageDef> pages;
     pages.push_back({ "Backup",
                       wxArtProvider::GetBitmapBundle(wxART_HARDDISK, wxART_BUTTON, wxSize(28, 28)),
-                      wxArtProvider::GetBitmapBundle(wxART_HARDDISK, wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_BACKUP", wxArtProvider::GetBitmapBundle(wxART_HARDDISK, wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new BackupSettingsPanel(p, this)); } });
     pages.push_back({ "View",
                       wxArtProvider::GetBitmapBundle(wxART_FULL_SCREEN, wxART_BUTTON, iconSize),
-                      wxArtProvider::GetBitmapBundle(wxART_FULL_SCREEN, wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_VIEW", wxArtProvider::GetBitmapBundle(wxART_FULL_SCREEN, wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new ViewSettingsPanel(p, this)); } });
     pages.push_back({ "Effects Grid",
                       wxBitmapBundle(gridIcon),
-                      scaledBundle(gridImage, listIconSize),
+                      listIcon("xlART_PREF_GRID", scaledBundle(gridImage, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new EffectsGridSettingsPanel(p, this)); } });
     pages.push_back({ "Sequences",
                       wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, iconSize),
-                      wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_SEQUENCES", wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new SequenceFileSettingsPanel(p, this)); } });
     pages.push_back({ "Output",
                       wxArtProvider::GetBitmapBundle("xlART_OUTPUT_LIGHTS_ON", wxART_BUTTON, iconSize),
-                      wxArtProvider::GetBitmapBundle("xlART_OUTPUT_LIGHTS_ON", wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_OUTPUT", wxArtProvider::GetBitmapBundle("xlART_OUTPUT_LIGHTS_ON", wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new OutputSettingsPanel(p, this)); } });
     pages.push_back({ "Check Sequence",
                       wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, iconSize),
-                      wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_CHECK", wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new CheckSequenceSettingsPanel(p, this)); } });
     pages.push_back({ "Random Effects",
                       wxArtProvider::GetBitmapBundle("xlART_DICE_ICON", wxART_BUTTON, wxSize(28, 28)),
-                      wxArtProvider::GetBitmapBundle("xlART_DICE_ICON", wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_RANDOM", wxArtProvider::GetBitmapBundle("xlART_DICE_ICON", wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new RandomEffectsSettingsPanel(p, this)); } });
     pages.push_back({ "Colors",
                       wxArtProvider::GetBitmapBundle("xlART_RENDER_ALL", wxART_BUTTON, iconSize),
-                      wxArtProvider::GetBitmapBundle("xlART_RENDER_ALL", wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_COLORS", wxArtProvider::GetBitmapBundle("xlART_RENDER_ALL", wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new ColorManagerSettingsPanel(p, this)); } });
     pages.push_back({ "Other",
                       wxBitmapBundle(settingIcon),
-                      scaledBundle(settingsImage, listIconSize),
+                      listIcon("xlART_PREF_OTHER", scaledBundle(settingsImage, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new OtherSettingsPanel(p, this)); } });
     pages.push_back({ "Toolbars",
                       wxArtProvider::GetBitmapBundle(wxART_LIST_VIEW, wxART_BUTTON, iconSize),
-                      wxArtProvider::GetBitmapBundle(wxART_LIST_VIEW, wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_TOOLBARS", wxArtProvider::GetBitmapBundle(wxART_LIST_VIEW, wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new ToolbarsSettingsPanel(p, this)); } });
 #ifdef ENABLE_SERVICES
     pages.push_back({ "Services",
                       wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, iconSize),
-                      wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, listIconSize),
+                      listIcon("xlART_PREF_SERVICES", wxArtProvider::GetBitmapBundle("xlART_SETTINGS", wxART_BUTTON, listIconSize)),
                       [this](wxWindow* p) { return (wxWindow*)(new ServicesPanel(p, _serviceManager.get())); } });
 #endif
 
